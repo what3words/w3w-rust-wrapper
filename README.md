@@ -220,7 +220,7 @@ println!("{:?}", find_possible_3wa); // []
 
 ### is_valid_3wa
 
-This method takes a string as a parameter and first passes it through the W3W regex filter (akin to calling isPossible3wa() on the string) and then calls the W3W api to verify it is a real 3WA.
+This method takes a string as a parameter and first passes it through the W3W regex filter (akin to calling `is_possible_3wa()` on the string) and then calls the W3W api to verify it is a real 3WA.
 
 Example:
 
