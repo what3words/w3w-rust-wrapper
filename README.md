@@ -237,9 +237,17 @@ let is_valid_3wa: bool = w3w.is_valid_3wa("rust.is.cool");
 println!("{}", is_valid_3wa); // false
 ```
 
+## Examples
+
+Examples can be found in `/examples` directory, simply run the following to try it out:
+
+```bash
+$ W3W_API_KEY=<YOUR_API_KEY> cargo run --example wrapper-demo
+```
+
 ## Issues
 
-Find a bug or want to request a new feature? Please let us know by submitting an issue.
+Found a bug or want to request a new feature? Please let us know by submitting an issue.
 
 ## Contributing
 
