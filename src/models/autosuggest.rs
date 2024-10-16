@@ -74,7 +74,7 @@ impl AutosuggestOptions {
         self
     }
 
-    pub fn to_hash_map(&self) -> HashMap<&'static str, String> {
+    pub fn to_hash_map<'a>(&self) -> HashMap<&'a str, String> {
         let mut map = HashMap::new();
         if let Some(ref n_result) = &self.n_result {
             map.insert("n-result", n_result.clone());

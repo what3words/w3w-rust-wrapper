@@ -6,7 +6,7 @@ use crate::{
     models::language::AvailableLanguages,
     models::location::{Address, Coordinates},
 };
-use http::{HeaderMap, HeaderName};
+use http::{HeaderMap, HeaderName, HeaderValue};
 use regex::Regex;
 use serde::de::DeserializeOwned;
 use std::{any::TypeId, collections::HashMap, env};
@@ -30,14 +30,22 @@ impl What3words {
         }
     }
 
-    pub fn header(&mut self, key: impl Into<HeaderName>, value: impl Into<String>) -> &mut Self {
-        if let Ok(value) = value.into().parse() {
-            self.headers.insert(key.into(), value);
+    pub fn header<K, V>(mut self, key: K, value: V) -> Self
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
+    {
+        if let (Ok(header_name), Ok(header_value)) =
+            (HeaderName::try_from(key), HeaderValue::try_from(value))
+        {
+            self.headers.insert(header_name, header_value);
         }
         self
     }
 
-    pub fn hostname(&mut self, host: impl Into<String>) -> &mut Self {
+    pub fn hostname(mut self, host: impl Into<String>) -> Self {
         self.host = host.into();
         self
     }
@@ -51,9 +59,12 @@ impl What3words {
         result.map(|address| address)
     }
 
-    pub async fn convert_to_coordinates(&self, what3words: &'static str) -> Result<Address, Error> {
+    pub async fn convert_to_coordinates(
+        &self,
+        what3words: impl Into<String>,
+    ) -> Result<Address, Error> {
         let mut params = HashMap::new();
-        params.insert("words", what3words.to_string());
+        params.insert("words", what3words.into());
         let url = format!("{}/convert-to-coordinates", self.host);
         let result = self.request::<Address>(url, Some(params)).await;
         result.map(|address| address)
@@ -65,12 +76,15 @@ impl What3words {
         result.map(|languages| languages)
     }
 
-    pub async fn grid_section<T: 'static>(&self, bounding_box: &'static str) -> Result<T, Error>
+    pub async fn grid_section<T: 'static>(
+        &self,
+        bounding_box: impl Into<String>,
+    ) -> Result<T, Error>
     where
         T: DeserializeOwned,
     {
         let mut params = HashMap::new();
-        params.insert("bounding-box", bounding_box.to_string());
+        params.insert("bounding-box", bounding_box.into());
         let url = format!("{}/grid-section", self.host);
         if TypeId::of::<T>() == TypeId::of::<GridSectionGeoJson>() {
             params.insert("format", "geojson".to_string());
@@ -82,13 +96,13 @@ impl What3words {
 
     pub async fn autosuggest(
         &self,
-        input: &'static str,
+        input: impl Into<String>,
         options: Option<&AutosuggestOptions>,
     ) -> Result<Autosuggest, Error> {
         let mut params = options
             .map(|option| option.to_hash_map())
             .unwrap_or(HashMap::<&str, String>::new());
-        params.insert("input", input.to_string());
+        params.insert("input", input.into());
         let url = format!("{}/autosuggest", self.host);
         let result = self.request::<Autosuggest>(url, Some(params)).await;
         result.map(|autosuggest| autosuggest)
@@ -96,13 +110,13 @@ impl What3words {
 
     pub async fn autosuggest_with_coordinates(
         &self,
-        input: &'static str,
+        input: impl Into<String>,
         options: Option<&AutosuggestOptions>,
     ) -> Result<Autosuggest, Error> {
         let mut params = options
             .map(|option| option.to_hash_map())
             .unwrap_or(HashMap::<&str, String>::new());
-        params.insert("input", input.to_string());
+        params.insert("input", input.into());
         let url = format!("{}/autosuggest-with-coordinates", self.host);
         let result = self.request::<Autosuggest>(url, Some(params)).await;
         result.map(|autosuggest| autosuggest)
@@ -110,7 +124,7 @@ impl What3words {
 
     pub async fn autosuggest_selection(
         &self,
-        input: &'static str,
+        input: impl Into<String>,
         suggestion: &Suggestion,
         options: Option<&AutosuggestOptions>,
     ) -> Result<(), Error> {
@@ -119,7 +133,7 @@ impl What3words {
                 let mut map = opts.to_hash_map();
                 map.insert("rank", suggestion.rank.to_string());
                 map.insert("selection", suggestion.words.clone());
-                map.insert("raw-input", input.to_string());
+                map.insert("raw-input", input.into());
                 if let Some(input_type) = opts.input_type.as_ref() {
                     if input_type == "text" {
                         map.insert("source-api", "text".to_string());
@@ -134,27 +148,29 @@ impl What3words {
         result.map(|autosuggest| autosuggest)
     }
 
-    pub fn is_possible_3wa(&self, input: &'static str) -> bool {
+    pub fn is_possible_3wa(&self, input: impl Into<String>) -> bool {
         let pattern = Regex::new(r#"^/*(?:[^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}|'<,.>?/"";:£§º©®\s]+[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+|[^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3})"#).unwrap();
-        pattern.is_match(input)
+        pattern.is_match(&input.into())
     }
-    pub fn find_possible_3wa(&self, input: &'static str) -> Vec<String> {
+    pub fn find_possible_3wa(&self, input: impl Into<String>) -> Vec<String> {
         let pattern = Regex::new(r#"[^0-9`~!@#$%^&*()+\-_=[{\\]}\\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\\|'<,.>?/"";:£§º©®\s]{1,}"#).unwrap();
         pattern
-            .find_iter(input)
+            .find_iter(&input.into())
             .map(|mat| mat.as_str().to_string())
             .collect()
     }
 
-    pub fn is_valid_3wa(&self, input: &'static str) -> bool {
-        if self.is_possible_3wa(input) {
-            if let Ok(suggestion) = futures::executor::block_on(
-                self.autosuggest(input, Some(&AutosuggestOptions::default().n_result("1"))),
-            ) {
+    pub fn is_valid_3wa(&self, input: impl Into<String>) -> bool {
+        let input_str = input.into();
+        if self.is_possible_3wa(&input_str) {
+            if let Ok(suggestion) = futures::executor::block_on(self.autosuggest(
+                &input_str,
+                Some(&AutosuggestOptions::default().n_result("1")),
+            )) {
                 return suggestion
                     .suggestions
                     .first()
-                    .map_or(false, |s| s.words == input);
+                    .map_or(false, |s| s.words == input_str);
             }
         }
         false
@@ -192,6 +208,7 @@ impl What3words {
             return Err(Error::ApiError(error_response));
         }
         match response.content_length() {
+            // Captures successful responses with no content
             Some(0) => Ok(serde_json::from_str("null").unwrap()),
             _ => response.json::<T>().await.map_err(Error::from),
         }
