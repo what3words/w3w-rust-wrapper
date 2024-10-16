@@ -1,11 +1,10 @@
-pub use self::error::Error;
 pub use self::models::{
     autosuggest::{Autosuggest, AutosuggestOptions, Suggestion},
-    gridsection::{GridSectionGeoJson, GridSectionJson},
-    location::{Address, Coordinates},
+    gridsection::{Feature, Geometry, GridSectionGeoJson, GridSectionJson, Line},
+    language::{AvailableLanguages, Language},
+    location::{Address, Coordinates, Square},
 };
-pub use self::service::What3words;
+pub use self::service::{Result, What3words};
 
-mod error;
 mod models;
 mod service;
