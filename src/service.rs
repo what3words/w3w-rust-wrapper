@@ -1,5 +1,4 @@
 use crate::{
-    error::Error,
     models::autosuggest::{Autosuggest, AutosuggestOptions, Suggestion},
     models::error::ErrorResponse,
     models::gridsection::{GridSectionGeoJson, GridSectionJson},
@@ -8,8 +7,52 @@ use crate::{
 };
 use http::{HeaderMap, HeaderName, HeaderValue};
 use regex::Regex;
+use reqwest::Client;
 use serde::de::DeserializeOwned;
-use std::{any::TypeId, collections::HashMap, env};
+use std::{any::TypeId, collections::HashMap, env, fmt};
+
+#[derive(Debug)]
+pub enum Error {
+    NetworkError(String),
+    HttpError(String),
+    ApiError(ErrorResponse),
+    DecodeError(String),
+    UnknownError(String),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::NetworkError(msg) => write!(f, "Network error: {}", msg),
+            Error::HttpError(msg) => write!(f, "HTTP error: {}", msg),
+            Error::ApiError(res) => write!(
+                f,
+                "What3words error: {} - {}",
+                res.error.code, res.error.message
+            ),
+            Error::DecodeError(msg) => write!(f, "Decode error: {}", msg),
+            Error::UnknownError(msg) => write!(f, "Unknown error: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
+impl From<reqwest::Error> for Error {
+    fn from(error: reqwest::Error) -> Self {
+        if error.is_request() {
+            Error::HttpError(error.to_string())
+        } else if error.is_connect() {
+            Error::NetworkError(error.to_string())
+        } else if error.is_decode() {
+            Error::DecodeError(error.to_string())
+        } else {
+            Error::UnknownError(error.to_string())
+        }
+    }
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 const DEFAULT_W3W_API_BASE_URL: &str = "https://api.what3words.com/v3";
 const HEADER_WHAT3WORDS_API_KEY: &str = "X-Api-Key";
@@ -50,7 +93,7 @@ impl What3words {
         self
     }
 
-    pub async fn convert_to_3wa(&self, coordinates: &Coordinates) -> Result<Address, Error> {
+    pub async fn convert_to_3wa(&self, coordinates: &Coordinates) -> Result<Address> {
         let mut params = HashMap::new();
         let location = format!("{},{}", coordinates.lat, coordinates.lng);
         params.insert("coordinates", location);
@@ -59,10 +102,7 @@ impl What3words {
         result.map(|address| address)
     }
 
-    pub async fn convert_to_coordinates(
-        &self,
-        what3words: impl Into<String>,
-    ) -> Result<Address, Error> {
+    pub async fn convert_to_coordinates(&self, what3words: impl Into<String>) -> Result<Address> {
         let mut params = HashMap::new();
         params.insert("words", what3words.into());
         let url = format!("{}/convert-to-coordinates", self.host);
@@ -70,16 +110,13 @@ impl What3words {
         result.map(|address| address)
     }
 
-    pub async fn available_languages(&self) -> Result<AvailableLanguages, Error> {
+    pub async fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
         let result = self.request::<AvailableLanguages>(url, None).await;
         result.map(|languages| languages)
     }
 
-    pub async fn grid_section<T: 'static>(
-        &self,
-        bounding_box: impl Into<String>,
-    ) -> Result<T, Error>
+    pub async fn grid_section<T: 'static>(&self, bounding_box: impl Into<String>) -> Result<T>
     where
         T: DeserializeOwned,
     {
@@ -98,7 +135,7 @@ impl What3words {
         &self,
         input: impl Into<String>,
         options: Option<&AutosuggestOptions>,
-    ) -> Result<Autosuggest, Error> {
+    ) -> Result<Autosuggest> {
         let mut params = options
             .map(|option| option.to_hash_map())
             .unwrap_or(HashMap::<&str, String>::new());
@@ -112,7 +149,7 @@ impl What3words {
         &self,
         input: impl Into<String>,
         options: Option<&AutosuggestOptions>,
-    ) -> Result<Autosuggest, Error> {
+    ) -> Result<Autosuggest> {
         let mut params = options
             .map(|option| option.to_hash_map())
             .unwrap_or(HashMap::<&str, String>::new());
@@ -127,7 +164,7 @@ impl What3words {
         input: impl Into<String>,
         suggestion: &Suggestion,
         options: Option<&AutosuggestOptions>,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let params = match options {
             Some(opts) => {
                 let mut map = opts.to_hash_map();
@@ -176,11 +213,7 @@ impl What3words {
         false
     }
 
-    async fn request<T>(
-        &self,
-        url: String,
-        params: Option<HashMap<&str, String>>,
-    ) -> Result<T, Error>
+    async fn request<T>(&self, url: String, params: Option<HashMap<&str, String>>) -> Result<T>
     where
         T: DeserializeOwned,
     {
@@ -190,7 +223,7 @@ impl What3words {
             env::consts::OS
         );
 
-        let response = reqwest::Client::new()
+        let response = Client::new()
             .get(&url)
             .query(&params)
             .headers(self.headers.clone())
