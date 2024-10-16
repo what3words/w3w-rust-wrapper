@@ -4,7 +4,7 @@
 
 A rust library to use the [what3words v3 API](https://docs.what3words.com/api/v3/).
 
-API methods are grouped into a single service object which can be centrally managed by a `What3wordsV3`instance.
+API methods are grouped into a single service object which can be centrally managed by a `What3words`instance.
 
 # Overview
 
