@@ -128,7 +128,7 @@ pub struct Suggestion {
     pub rank: u32,
     pub language: String,
     #[serde(rename = "distanceToFocusKm")]
-    pub distance_to_focus_km: Option<String>,
+    pub distance_to_focus_km: Option<u32>,
     pub square: Option<Square>,
     pub coordinates: Option<Coordinates>,
     pub map: Option<String>,
