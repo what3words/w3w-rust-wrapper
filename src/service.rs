@@ -6,7 +6,7 @@ use crate::{
     models::language::AvailableLanguages,
     models::location::{Address, Coordinates},
 };
-use http::HeaderMap;
+use http::{HeaderMap, HeaderName};
 use regex::Regex;
 use serde::de::DeserializeOwned;
 use std::{any::TypeId, collections::HashMap, env};
@@ -16,27 +16,29 @@ const HEADER_WHAT3WORDS_API_KEY: &str = "X-Api-Key";
 const W3W_WRAPPER: &str = "X-W3W-Wrapper";
 
 pub struct What3words {
-    api_key: &'static str,
-    host: &'static str,
+    api_key: String,
+    host: String,
     headers: HeaderMap,
 }
 
 impl What3words {
-    pub fn new(api_key: &'static str) -> Self {
+    pub fn new(api_key: impl Into<String>) -> Self {
         Self {
-            api_key,
+            api_key: api_key.into(),
             headers: HeaderMap::new(),
-            host: DEFAULT_W3W_API_BASE_URL,
+            host: DEFAULT_W3W_API_BASE_URL.into(),
         }
     }
 
-    pub fn header(mut self, key: &'static str, value: &'static str) -> Self {
-        self.headers.insert(key, value.parse().unwrap());
+    pub fn header(&mut self, key: impl Into<HeaderName>, value: impl Into<String>) -> &mut Self {
+        if let Ok(value) = value.into().parse() {
+            self.headers.insert(key.into(), value);
+        }
         self
     }
 
-    pub fn hostname(mut self, host: &'static str) -> Self {
-        self.host = host;
+    pub fn hostname(&mut self, host: impl Into<String>) -> &mut Self {
+        self.host = host.into();
         self
     }
 
@@ -177,7 +179,7 @@ impl What3words {
             .query(&params)
             .headers(self.headers.clone())
             .header(W3W_WRAPPER, &user_agent)
-            .header(HEADER_WHAT3WORDS_API_KEY, self.api_key)
+            .header(HEADER_WHAT3WORDS_API_KEY, &self.api_key)
             .send()
             .await
             .map_err(Error::from)?;
