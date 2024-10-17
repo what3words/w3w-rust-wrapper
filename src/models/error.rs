@@ -7,6 +7,6 @@ pub struct Error {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ErrorResponse {
+pub struct ErrorResult {
     pub error: Error,
 }

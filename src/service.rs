@@ -1,9 +1,9 @@
-use crate::{
-    models::autosuggest::{Autosuggest, AutosuggestOptions, Suggestion},
-    models::error::ErrorResponse,
-    models::gridsection::{GridSectionGeoJson, GridSectionJson},
-    models::language::AvailableLanguages,
-    models::location::{Address, Coordinates},
+use crate::models::{
+    autosuggest::{Autosuggest, AutosuggestResult, AutosuggestSelection},
+    error::ErrorResult,
+    gridsection::{FormattedGridSection, GridSection, GridSectionGeoJson},
+    language::AvailableLanguages,
+    location::{Address, AddressGeoJson, ConvertTo3wa, ConvertToCoordinates, FormattedAddress},
 };
 use http::{HeaderMap, HeaderName, HeaderValue};
 use regex::Regex;
@@ -11,11 +11,15 @@ use reqwest::Client;
 use serde::de::DeserializeOwned;
 use std::{any::TypeId, collections::HashMap, env, fmt};
 
+pub trait ToHashMap {
+    fn to_hash_map<'a>(&self) -> HashMap<&'a str, String>;
+}
+
 #[derive(Debug)]
 pub enum Error {
     NetworkError(String),
     HttpError(String),
-    ApiError(ErrorResponse),
+    ApiError(ErrorResult),
     DecodeError(String),
     UnknownError(String),
 }
@@ -25,11 +29,9 @@ impl fmt::Display for Error {
         match self {
             Error::NetworkError(msg) => write!(f, "Network error: {}", msg),
             Error::HttpError(msg) => write!(f, "HTTP error: {}", msg),
-            Error::ApiError(res) => write!(
-                f,
-                "What3words error: {} - {}",
-                res.error.code, res.error.message
-            ),
+            Error::ApiError(res) => {
+                write!(f, "W3W error: {} {}", res.error.code, res.error.message)
+            }
             Error::DecodeError(msg) => write!(f, "Decode error: {}", msg),
             Error::UnknownError(msg) => write!(f, "Unknown error: {}", msg),
         }
@@ -93,93 +95,81 @@ impl What3words {
         self
     }
 
-    pub async fn convert_to_3wa(&self, coordinates: &Coordinates) -> Result<Address> {
-        let mut params = HashMap::new();
-        let location = format!("{},{}", coordinates.lat, coordinates.lng);
-        params.insert("coordinates", location);
+    pub async fn convert_to_3wa<T: 'static>(&self, conversion_options: ConvertTo3wa) -> Result<T>
+    where
+        T: DeserializeOwned + FormattedAddress,
+    {
         let url = format!("{}/convert-to-3wa", self.host);
-        let result = self.request::<Address>(url, Some(params)).await;
-        result.map(|address| address)
+        let mut params = conversion_options.to_hash_map();
+        if TypeId::of::<T>() == TypeId::of::<AddressGeoJson>() {
+            params.insert("format", "geojson".to_string());
+        } else if TypeId::of::<T>() == TypeId::of::<Address>() {
+            params.insert("format", "json".to_string());
+        }
+        self.request::<T>(url, Some(params)).await
     }
 
-    pub async fn convert_to_coordinates(&self, what3words: impl Into<String>) -> Result<Address> {
-        let mut params = HashMap::new();
-        params.insert("words", what3words.into());
+    pub async fn convert_to_coordinates<T: 'static>(
+        &self,
+        conversion_options: ConvertToCoordinates,
+    ) -> Result<T>
+    where
+        T: DeserializeOwned + FormattedAddress,
+    {
         let url = format!("{}/convert-to-coordinates", self.host);
-        let result = self.request::<Address>(url, Some(params)).await;
-        result.map(|address| address)
+        let mut params = conversion_options.to_hash_map();
+        if TypeId::of::<T>() == TypeId::of::<AddressGeoJson>() {
+            params.insert("format", "geojson".to_string());
+        } else if TypeId::of::<T>() == TypeId::of::<Address>() {
+            params.insert("format", "json".to_string());
+        }
+        self.request::<T>(url, Some(params))
+            .await
+            .map(|address| address)
     }
 
     pub async fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
-        let result = self.request::<AvailableLanguages>(url, None).await;
-        result.map(|languages| languages)
+        self.request::<AvailableLanguages>(url, None)
+            .await
+            .map(|languages| languages)
     }
 
     pub async fn grid_section<T: 'static>(&self, bounding_box: impl Into<String>) -> Result<T>
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + FormattedGridSection,
     {
         let mut params = HashMap::new();
         params.insert("bounding-box", bounding_box.into());
         let url = format!("{}/grid-section", self.host);
         if TypeId::of::<T>() == TypeId::of::<GridSectionGeoJson>() {
             params.insert("format", "geojson".to_string());
-        } else if TypeId::of::<T>() == TypeId::of::<GridSectionJson>() {
+        } else if TypeId::of::<T>() == TypeId::of::<GridSection>() {
             params.insert("format", "json".to_string());
         }
         self.request::<T>(url, Some(params)).await
     }
 
-    pub async fn autosuggest(
-        &self,
-        input: impl Into<String>,
-        options: Option<&AutosuggestOptions>,
-    ) -> Result<Autosuggest> {
-        let mut params = options
-            .map(|option| option.to_hash_map())
-            .unwrap_or(HashMap::<&str, String>::new());
-        params.insert("input", input.into());
+    pub async fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
+        let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest", self.host);
-        let result = self.request::<Autosuggest>(url, Some(params)).await;
-        result.map(|autosuggest| autosuggest)
+        self.request::<AutosuggestResult>(url, Some(params))
+            .await
+            .map(|autosuggest| autosuggest)
     }
 
     pub async fn autosuggest_with_coordinates(
         &self,
-        input: impl Into<String>,
-        options: Option<&AutosuggestOptions>,
-    ) -> Result<Autosuggest> {
-        let mut params = options
-            .map(|option| option.to_hash_map())
-            .unwrap_or(HashMap::<&str, String>::new());
-        params.insert("input", input.into());
+        autosuggest: &Autosuggest,
+    ) -> Result<AutosuggestResult> {
+        let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest-with-coordinates", self.host);
-        let result = self.request::<Autosuggest>(url, Some(params)).await;
+        let result = self.request::<AutosuggestResult>(url, Some(params)).await;
         result.map(|autosuggest| autosuggest)
     }
 
-    pub async fn autosuggest_selection(
-        &self,
-        input: impl Into<String>,
-        suggestion: &Suggestion,
-        options: Option<&AutosuggestOptions>,
-    ) -> Result<()> {
-        let params = match options {
-            Some(opts) => {
-                let mut map = opts.to_hash_map();
-                map.insert("rank", suggestion.rank.to_string());
-                map.insert("selection", suggestion.words.clone());
-                map.insert("raw-input", input.into());
-                if let Some(input_type) = opts.input_type.as_ref() {
-                    if input_type == "text" {
-                        map.insert("source-api", "text".to_string());
-                    }
-                }
-                map
-            }
-            None => HashMap::<&str, String>::new(),
-        };
+    pub async fn autosuggest_selection(&self, selection: AutosuggestSelection) -> Result<()> {
+        let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
         let result = self.request::<()>(url, Some(params)).await;
         result.map(|autosuggest| autosuggest)
@@ -211,10 +201,9 @@ impl What3words {
     pub fn is_valid_3wa(&self, input: impl Into<String>) -> bool {
         let input_str = input.into();
         if self.is_possible_3wa(&input_str) {
-            if let Ok(suggestion) = futures::executor::block_on(self.autosuggest(
-                &input_str,
-                Some(&AutosuggestOptions::default().n_result("1")),
-            )) {
+            if let Ok(suggestion) = futures::executor::block_on(
+                self.autosuggest(&Autosuggest::new(&input_str).n_result("1")),
+            ) {
                 return suggestion
                     .suggestions
                     .first()
@@ -245,10 +234,7 @@ impl What3words {
             .map_err(Error::from)?;
 
         if !response.status().is_success() {
-            let error_response = response
-                .json::<ErrorResponse>()
-                .await
-                .map_err(Error::from)?;
+            let error_response = response.json::<ErrorResult>().await.map_err(Error::from)?;
             return Err(Error::ApiError(error_response));
         }
         match response.content_length() {

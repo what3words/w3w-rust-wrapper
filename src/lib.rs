@@ -1,8 +1,8 @@
 pub use self::models::{
-    autosuggest::{Autosuggest, AutosuggestOptions, Suggestion},
-    gridsection::{Feature, Geometry, GridSectionGeoJson, GridSectionJson, Line},
+    autosuggest::{Autosuggest, AutosuggestResult, AutosuggestSelection, Suggestion},
+    gridsection::{GridSection, GridSectionGeoJson, Line},
     language::{AvailableLanguages, Language},
-    location::{Address, Coordinates, Square},
+    location::{Address, AddressGeoJson, ConvertTo3wa, ConvertToCoordinates, Coordinates, Square},
 };
 pub use self::service::{Result, What3words};
 
