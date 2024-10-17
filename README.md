@@ -35,9 +35,7 @@ $ cargo add what3words
 Once you have the API Key, you can initialise the wrapper like this:
 
 ```rust
-use what3words::What3words;
-
-let wrapper = What3words::new("YOUR_API_KEY_HERE");
+let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE");
 ```
 
 > [!NOTE]
@@ -48,51 +46,78 @@ let wrapper = What3words::new("YOUR_API_KEY_HERE");
 You can also pass a different hostname if you have your own self-hosted what3words API.
 
 ```rust
-use what3words::What3words;
-
-let wrapper = What3words::new("YOUR_API_KEY_HERE").hostname("https://your.what3words.api/v3");
+let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE").hostname("https://your.what3words.api/v3");
 ```
 
 You can also set configure your own headers:
 
 ```rust
-use what3words::What3words;
-
-let wrapper = What3words::new("YOUR_API_KEY_HERE").header("X-Foo", "Bar");
+let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE").header("X-Foo", "Bar");
 ```
 
 ## Convert To Coordinates
 
-This function takes the words parameter as a string of 3 words `'filled.count.soap'`
-
-The returned payload from the `convert-to-coordinates` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#convert-to-coordinates).
+This function takes an instance of `what3words::ConvertToCoordinates` which accepts a string of 3 words `'filled.count.soap'`.
 
 Example:
 
 ```rust
-use what3words::{Address, What3words};
+let convert_to_coordinates = what3words::ConvertToCoordinates::new("filled.count.soap");
+```
 
-let address: Address = What3words::new("YOUR_API_KEY_HERE").convert_to_coordinates("filled.count.soap").await?;
+> [!NOTE]
+> The returned payload from the `convert-to-coordinates` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#convert-to-coordinates).
+
+Example:
+
+> [!NOTE]
+> It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `Address` will use `json` (default) and `AddressGeoJson` will use `geojson`.
+
+```rust
+use what3words::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
+
+let w3w = What3words::new("YOUR_API_KEY_HERE");
+
+let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
+let address: Address = w3w.convert_to_coordinates::<Address>(convert_to_coordinates).await?;
 println!("{:?}", address.coordinates); // Coordinates { lat: 51.520847, lng: -0.195521 }
 
+let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
+let address_geojson: AddressGeoJson = w3w.convert_to_coordinates::<AddressGeoJson>(convert_to_coordinates).await?;
+println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
 ```
 
 ## Convert To 3 Word Address
 
-This function takes the latitude and longitude:
-
-- 2 parameters: `lat=0.1234`, `lng=1.5678`
-
-The returned payload from the `convert-to-3wa` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#convert-to-3wa).
+This function takes an instance of `what3words::ConvertTo3wa` which accepts a latitude and longitude values (i.e.: `51.520847, -0.195521`):
 
 Example:
 
 ```rust
-use what3words::{Address, Coordinates, What3words};
+let convert_to_3wa = what3words::ConvertTo3wa::new(51.520847, -0.195521);
+```
 
-let coordinates = Coordinates { lat: 51.520847, lng: -0.195521  };
-let address: Address = What3words::new("YOUR_API_KEY_HERE").convert_to_3wa(&coordinates).await?;
+> [!NOTE]
+> The returned payload from the `convert-to-3wa` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#convert-to-3wa).
+
+Example:
+
+> [!NOTE]
+> It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `Address` will use `json` (default) and `AddressGeoJson` will use `geojson`.
+
+```rust
+use what3words::{Address, AddressGeoJson, ConvertTo3wa, What3words};
+
+let w3w = What3words::new("YOUR_API_KEY_HERE");
+
+let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
+let address: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa).await?;
 println!("{:?}", address.words); // "filled.count.soap"
+
+let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
+let address_geojson: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa).await?;
+println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
+
 ```
 
 ## AutoSuggest
@@ -120,15 +145,33 @@ In summary, the `clip` policy is used to optionally restrict the list of candida
 
 https://docs.what3words.com/api/v3/#autosuggest
 
-The returned payload from the `autosuggest` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#autosuggest).
+> [!NOTE]
+> The returned payload from the `autosuggest` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#autosuggest).
+
+This function takes an instance of `what3words::Autosuggest` which accepts a string of partial 3 words `'filled.count.so'`.
+
+Example:
+
+```rust
+let autosuggest = what3words::Autosuggest::new("filled.count.so");
+```
+
+The instance of `what3words::Autosuggest` also allows you to set clipping and focus:
+Example:
+
+```rust
+let autosuggest = what3words::Autosuggest::new("filled.count.so").focus("51.520847,-0.195521");
+```
 
 Example:
 
 ```rust
 use what3words::{Autosuggest, AutosuggestOptions, What3words};
 
-let autosuggest_option = AutosuggestOptions::default().focus("51.520847,-0.195521");
-let autosuggest: Autosuggest = What3words::new("YOUR_API_KEY_HERE").autosuggest("filled.count.so", Some(&autosuggest_option)).await?;
+let w3w = What3words::new("YOUR_API_KEY_HERE");
+
+let autosuggest_option = AutosuggestOptions::new("filled.count.so").focus("51.520847,-0.195521");
+let autosuggest: Autosuggest = w3w.autosuggest(&autosuggest_option).await?;
 println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
 ```
 
@@ -138,17 +181,19 @@ Returns a section of the 3m x 3m what3words grid for a bounding box.
 
 Example:
 
+> [!NOTE]
+> It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `GridSection` will use `json` (default) and `GridSectionGeoJson` will use `geojson`.
+
 ```rust
-use what3words::{GridSectionJson, GridSectionGeoJson, What3words};
+use what3words::{GridSection, GridSectionGeoJson, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
-// grid_section function requires you to specify the type between GridSectionJson and GridSectionGeoJson formats
-let grid_section_json = w3w
-        .grid_section::<GridSectionJson>("52.207988,0.116126,52.208867,0.117540")
+let grid_section_json: GridSection = w3w
+        .grid_section::<GridSection>("52.207988,0.116126,52.208867,0.117540")
         .await?;
     println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
-    let grid_section_geojson = w3w
+    let grid_section_geojson: GridSectionGeoJson = w3w
         .grid_section::<GridSectionGeoJson>("52.207988,0.116126,52.208867,0.117540")
         .await?;
     println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
