@@ -156,7 +156,8 @@ Example:
 let autosuggest = what3words::Autosuggest::new("filled.count.so");
 ```
 
-The instance of `what3words::Autosuggest` also allows you to set clipping and focus:
+The instance of `what3words::Autosuggest` also allows you to set optional parameter(s) (i.e: clipping, focus, etc.):
+
 Example:
 
 ```rust
