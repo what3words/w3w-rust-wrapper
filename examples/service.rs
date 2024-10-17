@@ -71,7 +71,7 @@ async fn main() -> what3words::Result<()> {
     let selected = autosuggest.suggestions.first().expect("Not found");
     match w3w
         .autosuggest_selection(
-            AutosuggestSelection::new("f.f.f", &selected).options(&autosuggest_option),
+            AutosuggestSelection::new("f.f.f", selected).options(&autosuggest_option),
         )
         .await
     {
