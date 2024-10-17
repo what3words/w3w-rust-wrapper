@@ -17,23 +17,23 @@ pub trait ToHashMap {
 
 #[derive(Debug)]
 pub enum Error {
-    NetworkError(String),
-    HttpError(String),
-    ApiError(ErrorResult),
-    DecodeError(String),
-    UnknownError(String),
+    Network(String),
+    Http(String),
+    Api(ErrorResult),
+    Decode(String),
+    Unknown(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::NetworkError(msg) => write!(f, "Network error: {}", msg),
-            Error::HttpError(msg) => write!(f, "HTTP error: {}", msg),
-            Error::ApiError(res) => {
+            Error::Network(msg) => write!(f, "Network error: {}", msg),
+            Error::Http(msg) => write!(f, "HTTP error: {}", msg),
+            Error::Api(res) => {
                 write!(f, "W3W error: {} {}", res.error.code, res.error.message)
             }
-            Error::DecodeError(msg) => write!(f, "Decode error: {}", msg),
-            Error::UnknownError(msg) => write!(f, "Unknown error: {}", msg),
+            Error::Decode(msg) => write!(f, "Decode error: {}", msg),
+            Error::Unknown(msg) => write!(f, "Unknown error: {}", msg),
         }
     }
 }
@@ -43,13 +43,13 @@ impl std::error::Error for Error {}
 impl From<reqwest::Error> for Error {
     fn from(error: reqwest::Error) -> Self {
         if error.is_request() {
-            Error::HttpError(error.to_string())
+            Error::Http(error.to_string())
         } else if error.is_connect() {
-            Error::NetworkError(error.to_string())
+            Error::Network(error.to_string())
         } else if error.is_decode() {
-            Error::DecodeError(error.to_string())
+            Error::Decode(error.to_string())
         } else {
-            Error::UnknownError(error.to_string())
+            Error::Unknown(error.to_string())
         }
     }
 }
@@ -95,9 +95,9 @@ impl What3words {
         self
     }
 
-    pub async fn convert_to_3wa<T: 'static>(&self, conversion_options: ConvertTo3wa) -> Result<T>
+    pub async fn convert_to_3wa<T>(&self, conversion_options: ConvertTo3wa) -> Result<T>
     where
-        T: DeserializeOwned + FormattedAddress,
+        T: 'static + DeserializeOwned + FormattedAddress,
     {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = conversion_options.to_hash_map();
@@ -109,12 +109,12 @@ impl What3words {
         self.request::<T>(url, Some(params)).await
     }
 
-    pub async fn convert_to_coordinates<T: 'static>(
+    pub async fn convert_to_coordinates<T>(
         &self,
         conversion_options: ConvertToCoordinates,
     ) -> Result<T>
     where
-        T: DeserializeOwned + FormattedAddress,
+        T: 'static + DeserializeOwned + FormattedAddress,
     {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = conversion_options.to_hash_map();
@@ -123,21 +123,17 @@ impl What3words {
         } else if TypeId::of::<T>() == TypeId::of::<Address>() {
             params.insert("format", "json".to_string());
         }
-        self.request::<T>(url, Some(params))
-            .await
-            .map(|address| address)
+        self.request::<T>(url, Some(params)).await
     }
 
     pub async fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
-        self.request::<AvailableLanguages>(url, None)
-            .await
-            .map(|languages| languages)
+        self.request::<AvailableLanguages>(url, None).await
     }
 
-    pub async fn grid_section<T: 'static>(&self, bounding_box: impl Into<String>) -> Result<T>
+    pub async fn grid_section<T>(&self, bounding_box: impl Into<String>) -> Result<T>
     where
-        T: DeserializeOwned + FormattedGridSection,
+        T: 'static + DeserializeOwned + FormattedGridSection,
     {
         let mut params = HashMap::new();
         params.insert("bounding-box", bounding_box.into());
@@ -153,9 +149,7 @@ impl What3words {
     pub async fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest", self.host);
-        self.request::<AutosuggestResult>(url, Some(params))
-            .await
-            .map(|autosuggest| autosuggest)
+        self.request::<AutosuggestResult>(url, Some(params)).await
     }
 
     pub async fn autosuggest_with_coordinates(
@@ -164,15 +158,13 @@ impl What3words {
     ) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest-with-coordinates", self.host);
-        let result = self.request::<AutosuggestResult>(url, Some(params)).await;
-        result.map(|autosuggest| autosuggest)
+        self.request::<AutosuggestResult>(url, Some(params)).await
     }
 
     pub async fn autosuggest_selection(&self, selection: AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
-        let result = self.request::<()>(url, Some(params)).await;
-        result.map(|autosuggest| autosuggest)
+        self.request::<()>(url, Some(params)).await
     }
 
     pub fn is_possible_3wa(&self, input: impl Into<String>) -> bool {
@@ -235,7 +227,7 @@ impl What3words {
 
         if !response.status().is_success() {
             let error_response = response.json::<ErrorResult>().await.map_err(Error::from)?;
-            return Err(Error::ApiError(error_response));
+            return Err(Error::Api(error_response));
         }
         match response.content_length() {
             // Captures successful responses with no content
