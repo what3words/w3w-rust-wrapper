@@ -236,3 +236,362 @@ impl What3words {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        models::{
+            autosuggest::Autosuggest,
+            location::{ConvertTo3wa, ConvertToCoordinates},
+        },
+        Suggestion,
+    };
+
+    use mockito::{Matcher, Server};
+    use serde_json::json;
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_convert_to_3wa() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/convert-to-3wa")
+            .match_query(mockito::Matcher::AllOf(vec![
+                Matcher::UrlEncoded("coordinates".into(), "51.521251,-0.203586".into()),
+                Matcher::UrlEncoded("format".into(), "json".into()),
+            ]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "country": "GB",
+                    "square": {
+                        "southwest": {
+                            "lng": -0.203607,
+                            "lat": 51.521241
+                        },
+                        "northeast": {
+                            "lng": -0.203575,
+                            "lat": 51.521261
+                        }
+                    },
+                    "nearestPlace": "Bayswater, London",
+                    "coordinates": {
+                        "lng": -0.203586,
+                        "lat": 51.521251
+                    },
+                    "words": "index.home.raft",
+                    "language": "en",
+                    "map": "https://w3w.co/index.home.raft"
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result: Address = w3w
+            .convert_to_3wa(ConvertTo3wa::new(51.521251, -0.203586))
+            .await
+            .unwrap();
+        mock.assert_async().await;
+        assert_eq!(result.words, "index.home.raft");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_convert_to_coordinates() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/convert-to-coordinates")
+            .match_query(Matcher::AllOf(vec![
+                Matcher::UrlEncoded("words".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("format".into(), "json".into()),
+            ]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "country": "GB",
+                    "square": {
+                        "southwest": {
+                            "lng": -0.203607,
+                            "lat": 51.521241
+                        },
+                        "northeast": {
+                            "lng": -0.203575,
+                            "lat": 51.521261
+                        }
+                    },
+                    "nearestPlace": "Bayswater, London",
+                    "coordinates": {
+                        "lng": -0.203586,
+                        "lat": 51.521251
+                    },
+                    "words": "index.home.raft",
+                    "language": "en",
+                    "map": "https://w3w.co/index.home.raft"
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result: Address = w3w
+            .convert_to_coordinates(ConvertToCoordinates::new("index.home.raft"))
+            .await
+            .unwrap();
+        mock.assert_async().await;
+        assert_eq!(result.coordinates.lng, -0.203586);
+        assert_eq!(result.coordinates.lat, 51.521251);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_available_languages() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+
+        let mock = mock_server
+            .mock("GET", "/available-languages")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "languages": [
+                        {
+                            "nativeName": "English",
+                            "code": "en",
+                            "name": "English"
+                        },
+                        {
+                            "nativeName": "Français",
+                            "code": "fr",
+                            "name": "French"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result = w3w.available_languages().await.unwrap();
+        mock.assert_async().await;
+        assert_eq!(result.languages.len(), 2);
+        assert_eq!(result.languages[0].code, "en");
+        assert_eq!(result.languages[1].code, "fr");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_grid_section() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/grid-section")
+            .match_query(Matcher::AllOf(vec![
+                Matcher::UrlEncoded(
+                    "bounding-box".into(),
+                    "51.521251,-0.203586,51.521251,-0.203586".into(),
+                ),
+                Matcher::UrlEncoded("format".into(), "json".into()),
+            ]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "lines": [
+                        {
+                            "start": {
+                                "lng": -0.203607,
+                                "lat": 51.521241
+                            },
+                            "end": {
+                                "lng": -0.203575,
+                                "lat": 51.521261
+                            }
+                        }
+                    ]
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result: GridSection = w3w
+            .grid_section("51.521251,-0.203586,51.521251,-0.203586")
+            .await
+            .unwrap();
+        mock.assert_async().await;
+        assert_eq!(result.lines.len(), 1);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_autosuggest() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/autosuggest")
+            .match_query(Matcher::AllOf(vec![Matcher::UrlEncoded(
+                "input".into(),
+                "index.home.raft".into(),
+            )]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "suggestions": [
+                        {
+                            "country": "GB",
+                            "nearestPlace": "Bayswater, London",
+                            "words": "index.home.raft",
+                            "rank": 1,
+                            "language": "en"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result = w3w
+            .autosuggest(&Autosuggest::new("index.home.raft"))
+            .await
+            .unwrap();
+        mock.assert_async().await;
+        assert_eq!(result.suggestions.len(), 1);
+        assert_eq!(result.suggestions[0].words, "index.home.raft");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_is_possible_3wa() {
+        let w3w = What3words::new("TEST_API_KEY");
+        assert!(w3w.is_possible_3wa("index.home.raft"));
+        assert!(!w3w.is_possible_3wa("invalid.3wa.address"));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_find_possible_3wa() {
+        let w3w = What3words::new("TEST_API_KEY");
+        let result = w3w.find_possible_3wa("This is a test with index.home.raft in it.");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], "index.home.raft");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_is_valid_3wa() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+
+        let mock = mock_server
+            .mock("GET", "/autosuggest")
+            .match_query(Matcher::AllOf(vec![
+                Matcher::UrlEncoded("input".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("n-result".into(), "1".into()),
+            ]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "suggestions": [
+                        {
+                            "country": "GB",
+                            "nearestPlace": "Bayswater, London",
+                            "words": "index.home.raft",
+                            "rank": 1,
+                            "language": "en"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w: What3words = What3words::new("TEST_API_KEY").hostname(url);
+        let result = w3w.is_valid_3wa("index.home.raft");
+        mock.assert_async().await;
+        assert!(result);
+        assert!(!w3w.is_valid_3wa("invalid.3wa.address"));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_custom_headers() {
+        let w3w = What3words::new("TEST_API_KEY").header("Custom-Header", "CustomValue");
+
+        assert_eq!(
+            w3w.headers.get("Custom-Header"),
+            Some(&HeaderValue::from_static("CustomValue"))
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_custom_hostname() {
+        let w3w = What3words::new("TEST_API_KEY").hostname("https://custom.api.url");
+        assert_eq!(w3w.host, "https://custom.api.url");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_autosuggest_with_coordinates() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/autosuggest-with-coordinates")
+            .match_query(Matcher::AllOf(vec![Matcher::UrlEncoded(
+                "input".into(),
+                "index.home.raft".into(),
+            )]))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "suggestions": [
+                        {
+                            "country": "GB",
+                            "nearestPlace": "Bayswater, London",
+                            "words": "index.home.raft",
+                            "rank": 1,
+                            "language": "en"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let result = w3w
+            .autosuggest_with_coordinates(&Autosuggest::new("index.home.raft"))
+            .await
+            .unwrap();
+
+        mock.assert_async().await;
+        assert_eq!(result.suggestions.len(), 1);
+        assert_eq!(result.suggestions[0].words, "index.home.raft");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_autosuggest_selection() {
+        let mut mock_server = Server::new_async().await;
+        let url = mock_server.url();
+        let mock = mock_server
+            .mock("GET", "/autosuggest-selection")
+            .match_query(Matcher::AllOf(vec![
+                Matcher::UrlEncoded("selection".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("rank".into(), "1".into()),
+                Matcher::UrlEncoded("raw-input".into(), "i.h.r".into()),
+            ]))
+            .with_status(200)
+            .create();
+
+        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let suggestion = Suggestion {
+            words: "index.home.raft".to_string(),
+            country: "GB".to_string(),
+            nearest_place: "Bayswater, London".to_string(),
+            distance_to_focus_km: None,
+            rank: 1,
+            square: None,
+            coordinates: None,
+            language: "en".to_string(),
+            map: None,
+        };
+        let result = w3w
+            .autosuggest_selection(AutosuggestSelection::new("i.h.r", &suggestion))
+            .await;
+        mock.assert_async().await;
+        assert!(result.is_ok());
+    }
+}
