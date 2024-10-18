@@ -1,15 +1,15 @@
 use crate::models::{
     autosuggest::{Autosuggest, AutosuggestResult, AutosuggestSelection},
     error::ErrorResult,
-    gridsection::{FormattedGridSection, GridSection, GridSectionGeoJson},
+    gridsection::FormattedGridSection,
     language::AvailableLanguages,
-    location::{Address, AddressGeoJson, ConvertTo3wa, ConvertToCoordinates, FormattedAddress},
+    location::{ConvertTo3wa, ConvertToCoordinates, FormattedAddress},
 };
 use http::{HeaderMap, HeaderName, HeaderValue};
 use regex::Regex;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
-use std::{any::TypeId, collections::HashMap, env, fmt};
+use std::{collections::HashMap, env, fmt};
 
 pub trait ToHashMap {
     fn to_hash_map<'a>(&self) -> HashMap<&'a str, String>;
@@ -97,15 +97,11 @@ impl What3words {
 
     pub async fn convert_to_3wa<T>(&self, conversion_options: ConvertTo3wa) -> Result<T>
     where
-        T: 'static + DeserializeOwned + FormattedAddress,
+        T: DeserializeOwned + FormattedAddress,
     {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = conversion_options.to_hash_map();
-        if TypeId::of::<T>() == TypeId::of::<AddressGeoJson>() {
-            params.insert("format", "geojson".to_string());
-        } else if TypeId::of::<T>() == TypeId::of::<Address>() {
-            params.insert("format", "json".to_string());
-        }
+        params.insert("format", T::format().to_string());
         self.request::<T>(url, Some(params)).await
     }
 
@@ -114,15 +110,11 @@ impl What3words {
         conversion_options: ConvertToCoordinates,
     ) -> Result<T>
     where
-        T: 'static + DeserializeOwned + FormattedAddress,
+        T: DeserializeOwned + FormattedAddress,
     {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = conversion_options.to_hash_map();
-        if TypeId::of::<T>() == TypeId::of::<AddressGeoJson>() {
-            params.insert("format", "geojson".to_string());
-        } else if TypeId::of::<T>() == TypeId::of::<Address>() {
-            params.insert("format", "json".to_string());
-        }
+        params.insert("format", T::format().to_string());
         self.request::<T>(url, Some(params)).await
     }
 
@@ -133,16 +125,12 @@ impl What3words {
 
     pub async fn grid_section<T>(&self, bounding_box: impl Into<String>) -> Result<T>
     where
-        T: 'static + DeserializeOwned + FormattedGridSection,
+        T: DeserializeOwned + FormattedGridSection,
     {
         let mut params = HashMap::new();
         params.insert("bounding-box", bounding_box.into());
         let url = format!("{}/grid-section", self.host);
-        if TypeId::of::<T>() == TypeId::of::<GridSectionGeoJson>() {
-            params.insert("format", "geojson".to_string());
-        } else if TypeId::of::<T>() == TypeId::of::<GridSection>() {
-            params.insert("format", "json".to_string());
-        }
+        params.insert("format", T::format().to_string());
         self.request::<T>(url, Some(params)).await
     }
 
@@ -245,7 +233,7 @@ mod tests {
             autosuggest::Autosuggest,
             location::{ConvertTo3wa, ConvertToCoordinates},
         },
-        Suggestion,
+        Address, GridSection, Suggestion,
     };
 
     use mockito::{Matcher, Server};

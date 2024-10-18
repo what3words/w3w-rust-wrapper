@@ -22,23 +22,19 @@ async fn main() -> what3words::Result<()> {
     }
     // -------------------
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address = w3w
-        .convert_to_coordinates::<Address>(convert_to_coordinates)
-        .await?;
+    let address: Address = w3w.convert_to_coordinates(convert_to_coordinates).await?;
     println!("Convert to Coordinates Json Format");
     println!("{:?}", address);
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address = w3w
-        .convert_to_coordinates::<AddressGeoJson>(convert_to_coordinates)
-        .await?;
+    let address: AddressGeoJson = w3w.convert_to_coordinates(convert_to_coordinates).await?;
     println!("Convert to Coordinates GeoJson Format");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address = w3w.convert_to_3wa::<Address>(convert_to_3wa).await?;
+    let address: Address = w3w.convert_to_3wa(convert_to_3wa).await?;
     println!("Convert to 3WA Json Format");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address = w3w.convert_to_3wa::<AddressGeoJson>(convert_to_3wa).await?;
+    let address: AddressGeoJson = w3w.convert_to_3wa(convert_to_3wa).await?;
     println!("Convert to 3WA GeoJson Format");
     println!("{:?}", address);
 
@@ -46,13 +42,13 @@ async fn main() -> what3words::Result<()> {
     let languages = w3w.available_languages().await?;
     println!("{:?}", languages.languages);
     // ------ GRID SECTION ------
-    let grid_section_json = w3w
-        .grid_section::<GridSection>("52.207988,0.116126,52.208867,0.117540")
+    let grid_section_json: GridSection = w3w
+        .grid_section("52.207988,0.116126,52.208867,0.117540")
         .await?;
     println!("Grid Section Json Format");
     println!("{:?}", grid_section_json);
-    let grid_section_geojson = w3w
-        .grid_section::<GridSectionGeoJson>("52.207988,0.116126,52.208867,0.117540")
+    let grid_section_geojson: GridSectionGeoJson = w3w
+        .grid_section("52.207988,0.116126,52.208867,0.117540")
         .await?;
     println!("Grid Section GeoJson Format");
     println!("{:?}", grid_section_geojson);

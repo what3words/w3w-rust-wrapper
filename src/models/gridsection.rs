@@ -4,7 +4,9 @@ use crate::Coordinates;
 
 use super::feature::Feature;
 
-pub trait FormattedGridSection {}
+pub trait FormattedGridSection {
+    fn format() -> &'static str;
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Line {
@@ -17,6 +19,12 @@ pub struct GridSection {
     pub lines: Vec<Line>,
 }
 
+impl FormattedGridSection for GridSection {
+    fn format() -> &'static str {
+        "json"
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct GridSectionGeoJson {
     pub features: Vec<Feature<Geometry>>,
@@ -24,8 +32,11 @@ pub struct GridSectionGeoJson {
     pub kind: String,
 }
 
-impl FormattedGridSection for GridSectionGeoJson {}
-impl FormattedGridSection for GridSection {}
+impl FormattedGridSection for GridSectionGeoJson {
+    fn format() -> &'static str {
+        "geojson"
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Geometry {

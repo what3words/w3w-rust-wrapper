@@ -5,7 +5,9 @@ use crate::service::ToHashMap;
 
 use super::feature::Feature;
 
-pub trait FormattedAddress {}
+pub trait FormattedAddress {
+    fn format() -> &'static str;
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct ConvertTo3wa {
@@ -126,7 +128,11 @@ impl fmt::Display for Address {
     }
 }
 
-impl FormattedAddress for Address {}
+impl FormattedAddress for Address {
+    fn format() -> &'static str {
+        "json"
+    }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Geometry {
@@ -148,4 +154,8 @@ impl fmt::Display for AddressGeoJson {
     }
 }
 
-impl FormattedAddress for AddressGeoJson {}
+impl FormattedAddress for AddressGeoJson {
+    fn format() -> &'static str {
+        "geojson"
+    }
+}
