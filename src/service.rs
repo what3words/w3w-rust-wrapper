@@ -102,7 +102,7 @@ impl What3words {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = conversion_options.to_hash_map();
         params.insert("format", T::format().to_string());
-        self.request::<T>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub async fn convert_to_coordinates<T>(
@@ -115,12 +115,12 @@ impl What3words {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = conversion_options.to_hash_map();
         params.insert("format", T::format().to_string());
-        self.request::<T>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub async fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
-        self.request::<AvailableLanguages>(url, None).await
+        self.request(url, None).await
     }
 
     pub async fn grid_section<T>(&self, bounding_box: impl Into<String>) -> Result<T>
@@ -131,13 +131,13 @@ impl What3words {
         params.insert("bounding-box", bounding_box.into());
         let url = format!("{}/grid-section", self.host);
         params.insert("format", T::format().to_string());
-        self.request::<T>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub async fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest", self.host);
-        self.request::<AutosuggestResult>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub async fn autosuggest_with_coordinates(
@@ -146,13 +146,13 @@ impl What3words {
     ) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest-with-coordinates", self.host);
-        self.request::<AutosuggestResult>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub async fn autosuggest_selection(&self, selection: AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
-        self.request::<()>(url, Some(params)).await
+        self.request(url, Some(params)).await
     }
 
     pub fn is_possible_3wa(&self, input: impl Into<String>) -> bool {
