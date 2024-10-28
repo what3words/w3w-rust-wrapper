@@ -84,8 +84,8 @@ impl Autosuggest {
         self
     }
 
-    pub fn focus(mut self, focus: impl Into<String>) -> Self {
-        self.focus = Some(focus.into());
+    pub fn focus(mut self, focus: Coordinates) -> Self {
+        self.focus = Some(focus.to_string());
         self
     }
 

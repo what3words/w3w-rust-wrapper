@@ -11,17 +11,19 @@ pub trait FormattedAddress {
 
 #[derive(Debug, Clone, Default)]
 pub struct ConvertTo3wa {
-    pub lat: Option<f64>,
-    pub lng: Option<f64>,
-    pub locale: Option<String>,
-    pub language: Option<String>,
+    coordinates: Option<Coordinates>,
+    locale: Option<String>,
+    language: Option<String>,
 }
 
 impl ToHashMap for ConvertTo3wa {
     fn to_hash_map<'a>(&self) -> HashMap<&'a str, String> {
         let mut map = HashMap::new();
-        if let (Some(lat), Some(lng)) = (self.lat, self.lng) {
-            map.insert("coordinates", format!("{},{}", lat, lng));
+        if let Some(coordinates) = &self.coordinates {
+            map.insert(
+                "coordinates",
+                format!("{},{}", coordinates.lat, coordinates.lng),
+            );
         }
         if let Some(ref locale) = &self.locale {
             map.insert("locale", locale.clone());
@@ -36,8 +38,7 @@ impl ToHashMap for ConvertTo3wa {
 impl ConvertTo3wa {
     pub fn new(lat: f64, lng: f64) -> Self {
         Self {
-            lat: Some(lat),
-            lng: Some(lng),
+            coordinates: Some(Coordinates::new(lat, lng)),
             locale: None,
             language: None,
         }
@@ -56,8 +57,8 @@ impl ConvertTo3wa {
 
 #[derive(Debug, Clone)]
 pub struct ConvertToCoordinates {
-    pub locale: Option<String>,
-    pub words: Option<String>,
+    locale: Option<String>,
+    words: Option<String>,
 }
 
 impl ToHashMap for ConvertToCoordinates {
@@ -94,7 +95,13 @@ pub struct Coordinates {
 
 impl fmt::Display for Coordinates {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{},{}", self.lat, self.lng)
+    }
+}
+
+impl Coordinates {
+    pub fn new(lat: f64, lng: f64) -> Self {
+        Self { lat, lng }
     }
 }
 
@@ -102,12 +109,6 @@ impl fmt::Display for Coordinates {
 pub struct Square {
     pub southwest: Coordinates,
     pub northeast: Coordinates,
-}
-
-impl fmt::Display for Square {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
@@ -120,12 +121,6 @@ pub struct Address {
     pub words: String,
     pub language: String,
     pub map: String,
-}
-
-impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
 }
 
 impl FormattedAddress for Address {
@@ -146,12 +141,6 @@ pub struct AddressGeoJson {
     pub features: Vec<Feature<Geometry>>,
     #[serde(rename = "type")]
     pub kind: String,
-}
-
-impl fmt::Display for AddressGeoJson {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
 }
 
 impl FormattedAddress for AddressGeoJson {

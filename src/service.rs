@@ -1,7 +1,7 @@
 use crate::models::{
     autosuggest::{Autosuggest, AutosuggestResult, AutosuggestSelection},
     error::ErrorResult,
-    gridsection::FormattedGridSection,
+    gridsection::{BoundingBox, FormattedGridSection},
     language::AvailableLanguages,
     location::{ConvertTo3wa, ConvertToCoordinates, FormattedAddress},
 };
@@ -95,23 +95,20 @@ impl What3words {
         self
     }
 
-    pub async fn convert_to_3wa<T>(&self, conversion_options: ConvertTo3wa) -> Result<T>
-    where
-        T: DeserializeOwned + FormattedAddress,
-    {
+    pub async fn convert_to_3wa<T: DeserializeOwned + FormattedAddress>(
+        &self,
+        conversion_options: ConvertTo3wa,
+    ) -> Result<T> {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = conversion_options.to_hash_map();
         params.insert("format", T::format().to_string());
         self.request(url, Some(params)).await
     }
 
-    pub async fn convert_to_coordinates<T>(
+    pub async fn convert_to_coordinates<T: DeserializeOwned + FormattedAddress>(
         &self,
         conversion_options: ConvertToCoordinates,
-    ) -> Result<T>
-    where
-        T: DeserializeOwned + FormattedAddress,
-    {
+    ) -> Result<T> {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = conversion_options.to_hash_map();
         params.insert("format", T::format().to_string());
@@ -123,12 +120,13 @@ impl What3words {
         self.request(url, None).await
     }
 
-    pub async fn grid_section<T>(&self, bounding_box: impl Into<String>) -> Result<T>
-    where
-        T: DeserializeOwned + FormattedGridSection,
-    {
+    pub async fn grid_section<T: DeserializeOwned + FormattedGridSection>(
+        &self,
+        bounding_box: BoundingBox,
+    ) -> Result<T> {
         let mut params = HashMap::new();
-        params.insert("bounding-box", bounding_box.into());
+        println!("TEST {:?}", bounding_box.to_string());
+        params.insert("bounding-box", bounding_box.to_string());
         let url = format!("{}/grid-section", self.host);
         params.insert("format", T::format().to_string());
         self.request(url, Some(params)).await
@@ -172,7 +170,7 @@ impl What3words {
         match pattern {
             Ok(pattern) => pattern
                 .find_iter(&input.into())
-                .map(|mat| mat.as_str().to_string())
+                .map(|matched| matched.as_str().to_string())
                 .collect(),
             Err(_) => Vec::new(),
         }
@@ -187,16 +185,17 @@ impl What3words {
                 return suggestion
                     .suggestions
                     .first()
-                    .map_or(false, |s| s.words == input_str);
+                    .map_or(false, |suggestion| suggestion.words == input_str);
             }
         }
         false
     }
 
-    async fn request<T>(&self, url: String, params: Option<HashMap<&str, String>>) -> Result<T>
-    where
-        T: DeserializeOwned,
-    {
+    async fn request<T: DeserializeOwned>(
+        &self,
+        url: String,
+        params: Option<HashMap<&str, String>>,
+    ) -> Result<T> {
         let user_agent = format!(
             "what3words-rust/{} ({})",
             env!("CARGO_PKG_VERSION"),
@@ -212,6 +211,8 @@ impl What3words {
             .send()
             .await
             .map_err(Error::from)?;
+
+        // panic!("{:?}", response.text().await);
 
         if !response.status().is_success() {
             let error_response = response.json::<ErrorResult>().await.map_err(Error::from)?;
@@ -276,7 +277,7 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
             .convert_to_3wa(ConvertTo3wa::new(51.521251, -0.203586))
             .await
@@ -322,7 +323,7 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
             .convert_to_coordinates(ConvertToCoordinates::new("index.home.raft"))
             .await
@@ -359,7 +360,7 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w.available_languages().await.unwrap();
         mock.assert_async().await;
         assert_eq!(result.languages.len(), 2);
@@ -376,7 +377,7 @@ mod tests {
             .match_query(Matcher::AllOf(vec![
                 Matcher::UrlEncoded(
                     "bounding-box".into(),
-                    "51.521251,-0.203586,51.521251,-0.203586".into(),
+                    "52.207988,0.116126,52.208867,0.11754".into(),
                 ),
                 Matcher::UrlEncoded("format".into(), "json".into()),
             ]))
@@ -386,12 +387,12 @@ mod tests {
                     "lines": [
                         {
                             "start": {
-                                "lng": -0.203607,
-                                "lat": 51.521241
+                                "lng": 0.116126,
+                                "lat": 52.207988
                             },
                             "end": {
-                                "lng": -0.203575,
-                                "lat": 51.521261
+                                "lng": 0.11754,
+                                "lat": 52.208867
                             }
                         }
                     ]
@@ -400,9 +401,9 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: GridSection = w3w
-            .grid_section("51.521251,-0.203586,51.521251,-0.203586")
+            .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.11754))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -436,7 +437,7 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w
             .autosuggest(&Autosuggest::new("index.home.raft"))
             .await
@@ -489,7 +490,7 @@ mod tests {
             )
             .create();
 
-        let w3w: What3words = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w: What3words = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w.is_valid_3wa("index.home.raft");
         mock.assert_async().await;
         assert!(result);
@@ -539,7 +540,7 @@ mod tests {
             )
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w
             .autosuggest_with_coordinates(&Autosuggest::new("index.home.raft"))
             .await
@@ -564,7 +565,7 @@ mod tests {
             .with_status(200)
             .create();
 
-        let w3w = What3words::new("TEST_API_KEY").hostname(url);
+        let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let suggestion = Suggestion {
             words: "index.home.raft".to_string(),
             country: "GB".to_string(),

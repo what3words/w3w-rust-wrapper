@@ -161,7 +161,7 @@ The instance of `what3words::Autosuggest` also allows you to set optional parame
 Example:
 
 ```rust
-let autosuggest = what3words::Autosuggest::new("filled.count.so").focus("51.520847,-0.195521");
+let autosuggest = what3words::Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
 ```
 
 Example:
@@ -171,7 +171,7 @@ use what3words::{Autosuggest, AutosuggestOptions, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-let autosuggest_option = AutosuggestOptions::new("filled.count.so").focus("51.520847,-0.195521");
+let autosuggest_option = AutosuggestOptions::new("filled.count.so").focus(Coordinates(51.520847, -0.195521));
 let autosuggest: Autosuggest = w3w.autosuggest(&autosuggest_option).await?;
 println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
 ```
@@ -186,18 +186,18 @@ Example:
 > It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `GridSection` will use `json` (default) and `GridSectionGeoJson` will use `geojson`.
 
 ```rust
-use what3words::{GridSection, GridSectionGeoJson, What3words};
+use what3words::{BoundingBox, GridSection, GridSectionGeoJson, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
 let grid_section_json: GridSection = w3w
-        .grid_section::<GridSection>("52.207988,0.116126,52.208867,0.117540")
+        .grid_section::<GridSection>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540))
         .await?;
-    println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
-    let grid_section_geojson: GridSectionGeoJson = w3w
-        .grid_section::<GridSectionGeoJson>("52.207988,0.116126,52.208867,0.117540")
-        .await?;
-    println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
+println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
+let grid_section_geojson: GridSectionGeoJson = w3w
+    .grid_section::<GridSectionGeoJson>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540))
+    .await?;
+println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
 ```
 
 ## Available Languages

@@ -1,8 +1,8 @@
 use std::env;
 
 use what3words::{
-    Address, AddressGeoJson, Autosuggest, AutosuggestSelection, ConvertTo3wa, ConvertToCoordinates,
-    GridSection, GridSectionGeoJson, What3words,
+    Address, AddressGeoJson, Autosuggest, AutosuggestSelection, BoundingBox, ConvertTo3wa,
+    ConvertToCoordinates, Coordinates, GridSection, GridSectionGeoJson, What3words,
 };
 
 #[::tokio::main]
@@ -10,7 +10,7 @@ async fn main() -> what3words::Result<()> {
     let api_key = env::var("W3W_API_KEY").expect(
         "Please ensure that W3W_API_KEY is added to your environment variables.\nRun `W3W_API_KEY=<YOUR_API_KEY> cargo run --example wrapper-demo` from bash/zsh or `$Env:W3W_API_KEY=<YOUR_API_KEY>; cargo run --example wrapper-demo` from PowerShell.",
     );
-    let w3w = What3words::new(api_key).header("X-Foo", "Bar");
+    let w3w = What3words::new(&api_key).header("X-Foo", "Bar");
     let words = "filled.count.soap";
     // ------ CONVERT TO COORDINATES/3WA ------
     // ------ Error ------
@@ -43,17 +43,18 @@ async fn main() -> what3words::Result<()> {
     println!("{:?}", languages.languages);
     // ------ GRID SECTION ------
     let grid_section_json: GridSection = w3w
-        .grid_section("52.207988,0.116126,52.208867,0.117540")
+        .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
         .await?;
     println!("Grid Section Json Format");
     println!("{:?}", grid_section_json);
     let grid_section_geojson: GridSectionGeoJson = w3w
-        .grid_section("52.207988,0.116126,52.208867,0.117540")
+        .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
         .await?;
     println!("Grid Section GeoJson Format");
     println!("{:?}", grid_section_geojson);
     // ------ AUTOSUGGEST ------
-    let autosuggest_option = Autosuggest::new("filled.count.so").focus("51.520847,-0.195521");
+    let autosuggest_option =
+        Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
     let autosuggest = w3w.autosuggest(&autosuggest_option).await?;
     println!("Autosuggest");
     println!("{:?} ", autosuggest);
