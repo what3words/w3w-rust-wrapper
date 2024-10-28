@@ -171,7 +171,7 @@ use what3words::{Autosuggest, AutosuggestOptions, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-let autosuggest_option = AutosuggestOptions::new("filled.count.so").focus(Coordinates(51.520847, -0.195521));
+let autosuggest_option = AutosuggestOptions::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
 let autosuggest: Autosuggest = w3w.autosuggest(&autosuggest_option).await?;
 println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
 ```
