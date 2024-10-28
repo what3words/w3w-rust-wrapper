@@ -76,29 +76,35 @@ async fn main() -> what3words::Result<()> {
         Err(err) => println!("{:?}", err),
     };
     // ------ HELPER FUNCTIONS ------
+    let did_you_mean: bool = w3w.did_you_mean("filled count soap");
+    println!("did_you_mean [1]: {}", did_you_mean);
+    let did_you_mean: bool = w3w.did_you_mean("filled-count-soap");
+    println!("did_you_mean [2]: {}", did_you_mean);
+    let did_you_mean: bool = w3w.did_you_mean("filledcountsoap");
+    println!("did_you_mean [3]: {}", did_you_mean);
     let is_possible_3wa: bool = w3w.is_possible_3wa("filled.count.soap");
-    println!("{}", is_possible_3wa);
+    println!("is_possible_3wa [1]: {}", is_possible_3wa);
     let is_possible_3wa: bool = w3w.is_possible_3wa("not a 3wa");
-    println!("{}", is_possible_3wa);
+    println!("is_possible_3wa [2]: {}", is_possible_3wa);
     let is_possible_3wa: bool = w3w.is_possible_3wa("not.a 3wa");
-    println!("{}", is_possible_3wa);
+    println!("is_possible_3wa [3]: {}", is_possible_3wa);
     let all_possible_3wa: Vec<String> =
         w3w.find_possible_3wa("from index.home.raft to filled.count.soap");
-    println!("All possible 3wa {:?}", all_possible_3wa);
+    println!("find_possible_3wa [1]: {:?}", all_possible_3wa);
     let find_possible_3wa: Vec<String> =
         w3w.find_possible_3wa("Please leave by my porch at filled.count.soap");
-    println!("{:?}", find_possible_3wa);
+    println!("find_possible_3wa [2]: {:?}", find_possible_3wa);
     let find_possible_3wa: Vec<String> =
         w3w.find_possible_3wa("Please leave by my porch at filled.count.soap or deed.tulip.judge");
-    println!("{:?}", find_possible_3wa);
+    println!("find_possible_3wa [3]: {:?}", find_possible_3wa);
     let find_possible_3wa: Vec<String> = w3w.find_possible_3wa("Please leave by my porch");
-    println!("{:?}", find_possible_3wa);
+    println!("find_possible_3wa [4]: {:?}", find_possible_3wa);
     let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.soap");
-    println!("{}", is_valid_3wa);
+    println!("is_valid_3wa [1]: {}", is_valid_3wa);
     let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.");
-    println!("{}", is_valid_3wa);
+    println!("is_valid_3wa [2]: {}", is_valid_3wa);
     let is_valid_3wa: bool = w3w.is_valid_3wa("rust.is.cool");
-    println!("{}", is_valid_3wa);
+    println!("is_valid_3wa [3]: {}", is_valid_3wa);
 
     Ok(())
 }

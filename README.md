@@ -220,6 +220,29 @@ println!("{:?}", available_languages.languages); // [Language { code: "en", ...,
 
 Below are some helper functions that you can use to identify if a given text is possibly a what3words address.
 
+### did_you_mean
+
+This method takes a string as a parameter and determines if the string passed in is almost in the form of a three word address.
+
+> [!NOTE]
+> This function does not validate if it is a real 3WA.
+
+Example:
+
+```rust
+use what3words::What3words;
+
+let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
+
+let did_you_mean: bool = w3w.did_you_mean("filled count soap");
+println!("{}", did_you_mean); // true
+let did_you_mean: bool = w3w.did_you_mean("filled-count-soap");
+println!("{}", did_you_mean); // true
+let did_you_mean: bool = w3w.did_you_mean("filledcountsoap");
+println!("{}", did_you_mean); // false
+
+```
+
 ### is_possible_3wa
 
 This method takes a string as a parameter and returns whether the string is in the format of a 3WA (eg “filled.count.soap”). Return type is boolean.

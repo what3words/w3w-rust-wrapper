@@ -153,6 +153,16 @@ impl What3words {
         self.request(url, Some(params)).await
     }
 
+    pub fn did_you_mean(&self, input: impl Into<String>) -> bool {
+        let pattern = Regex::new(
+            r#"^\/?[^0-9`~!@#$%^&*()+\-=\[\{\]}\\|'<>.,?\/\"";:£§º©®\s]{1,}[.\uFF61\u3002\uFF65\u30FB\uFE12\u17D4\u0964\u1362\u3002:။^_۔։ ,\\\/+'&\\:;|\u3000-]{1,2}[^0-9`~!@#$%^&*()+\-=\[\{\]}\\|'<>.,?\/\";:£§º©®\s]{1,}[.\uFF61\u3002\uFF65\u30FB\uFE12\u17D4\u0964\u1362\u3002:။^_۔։ ,\\\/+'&\\:;|\u3000-]{1,2}[^0-9`~!@#$%^&*()+\-=\[\{\]}\\|'<>.,?\/\";:£§º©®\s]{1,}$"#,
+        );
+        match pattern {
+            Ok(pattern) => pattern.is_match(&input.into()),
+            Err(_) => false,
+        }
+    }
+
     pub fn is_possible_3wa(&self, input: impl Into<String>) -> bool {
         let pattern = Regex::new(
             r#"^/*(?:[^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]{1,}|'<,.>?/"";:£§º©®\s]+[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+|[^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3}[.｡。･・︒។։။۔።।][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+([\u0020\u00A0][^0-9`~!@#$%^&*()+\-_=[{\\]}\|'<,.>?/"";:£§º©®\s]+){1,3})"#,
@@ -269,9 +279,9 @@ mod tests {
                         "lng": -0.203586,
                         "lat": 51.521251
                     },
-                    "words": "index.home.raft",
+                    "words": "filled.count.soap",
                     "language": "en",
-                    "map": "https://w3w.co/index.home.raft"
+                    "map": "https://w3w.co/filled.count.soap"
                 })
                 .to_string(),
             )
@@ -283,7 +293,7 @@ mod tests {
             .await
             .unwrap();
         mock.assert_async().await;
-        assert_eq!(result.words, "index.home.raft");
+        assert_eq!(result.words, "filled.count.soap");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -293,7 +303,7 @@ mod tests {
         let mock = mock_server
             .mock("GET", "/convert-to-coordinates")
             .match_query(Matcher::AllOf(vec![
-                Matcher::UrlEncoded("words".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("words".into(), "filled.count.soap".into()),
                 Matcher::UrlEncoded("format".into(), "json".into()),
             ]))
             .with_status(200)
@@ -315,9 +325,9 @@ mod tests {
                         "lng": -0.203586,
                         "lat": 51.521251
                     },
-                    "words": "index.home.raft",
+                    "words": "filled.count.soap",
                     "language": "en",
-                    "map": "https://w3w.co/index.home.raft"
+                    "map": "https://w3w.co/filled.count.soap"
                 })
                 .to_string(),
             )
@@ -325,7 +335,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new("index.home.raft"))
+            .convert_to_coordinates(ConvertToCoordinates::new("filled.count.soap"))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -418,7 +428,7 @@ mod tests {
             .mock("GET", "/autosuggest")
             .match_query(Matcher::AllOf(vec![Matcher::UrlEncoded(
                 "input".into(),
-                "index.home.raft".into(),
+                "filled.count.soap".into(),
             )]))
             .with_status(200)
             .with_body(
@@ -427,7 +437,7 @@ mod tests {
                         {
                             "country": "GB",
                             "nearestPlace": "Bayswater, London",
-                            "words": "index.home.raft",
+                            "words": "filled.count.soap",
                             "rank": 1,
                             "language": "en"
                         }
@@ -439,27 +449,34 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w
-            .autosuggest(&Autosuggest::new("index.home.raft"))
+            .autosuggest(&Autosuggest::new("filled.count.soap"))
             .await
             .unwrap();
         mock.assert_async().await;
         assert_eq!(result.suggestions.len(), 1);
-        assert_eq!(result.suggestions[0].words, "index.home.raft");
+        assert_eq!(result.suggestions[0].words, "filled.count.soap");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_did_you_mean() {
+        let w3w = What3words::new("TEST_API_KEY");
+        assert!(w3w.did_you_mean("filled｡count｡soap"));
+        assert!(w3w.did_you_mean("filled count soap"));
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_is_possible_3wa() {
         let w3w = What3words::new("TEST_API_KEY");
-        assert!(w3w.is_possible_3wa("index.home.raft"));
+        assert!(w3w.is_possible_3wa("filled.count.soap"));
         assert!(!w3w.is_possible_3wa("invalid.3wa.address"));
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_find_possible_3wa() {
         let w3w = What3words::new("TEST_API_KEY");
-        let result = w3w.find_possible_3wa("This is a test with index.home.raft in it.");
+        let result = w3w.find_possible_3wa("This is a test with filled.count.soap in it.");
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], "index.home.raft");
+        assert_eq!(result[0], "filled.count.soap");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -470,7 +487,7 @@ mod tests {
         let mock = mock_server
             .mock("GET", "/autosuggest")
             .match_query(Matcher::AllOf(vec![
-                Matcher::UrlEncoded("input".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("input".into(), "filled.count.soap".into()),
                 Matcher::UrlEncoded("n-result".into(), "1".into()),
             ]))
             .with_status(200)
@@ -480,7 +497,7 @@ mod tests {
                         {
                             "country": "GB",
                             "nearestPlace": "Bayswater, London",
-                            "words": "index.home.raft",
+                            "words": "filled.count.soap",
                             "rank": 1,
                             "language": "en"
                         }
@@ -491,7 +508,7 @@ mod tests {
             .create();
 
         let w3w: What3words = What3words::new("TEST_API_KEY").hostname(&url);
-        let result = w3w.is_valid_3wa("index.home.raft");
+        let result = w3w.is_valid_3wa("filled.count.soap");
         mock.assert_async().await;
         assert!(result);
         assert!(!w3w.is_valid_3wa("invalid.3wa.address"));
@@ -521,7 +538,7 @@ mod tests {
             .mock("GET", "/autosuggest-with-coordinates")
             .match_query(Matcher::AllOf(vec![Matcher::UrlEncoded(
                 "input".into(),
-                "index.home.raft".into(),
+                "filled.count.soap".into(),
             )]))
             .with_status(200)
             .with_body(
@@ -530,7 +547,7 @@ mod tests {
                         {
                             "country": "GB",
                             "nearestPlace": "Bayswater, London",
-                            "words": "index.home.raft",
+                            "words": "filled.count.soap",
                             "rank": 1,
                             "language": "en"
                         }
@@ -542,13 +559,13 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result = w3w
-            .autosuggest_with_coordinates(&Autosuggest::new("index.home.raft"))
+            .autosuggest_with_coordinates(&Autosuggest::new("filled.count.soap"))
             .await
             .unwrap();
 
         mock.assert_async().await;
         assert_eq!(result.suggestions.len(), 1);
-        assert_eq!(result.suggestions[0].words, "index.home.raft");
+        assert_eq!(result.suggestions[0].words, "filled.count.soap");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
@@ -558,7 +575,7 @@ mod tests {
         let mock = mock_server
             .mock("GET", "/autosuggest-selection")
             .match_query(Matcher::AllOf(vec![
-                Matcher::UrlEncoded("selection".into(), "index.home.raft".into()),
+                Matcher::UrlEncoded("selection".into(), "filled.count.soap".into()),
                 Matcher::UrlEncoded("rank".into(), "1".into()),
                 Matcher::UrlEncoded("raw-input".into(), "i.h.r".into()),
             ]))
@@ -567,7 +584,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let suggestion = Suggestion {
-            words: "index.home.raft".to_string(),
+            words: "filled.count.soap".to_string(),
             country: "GB".to_string(),
             nearest_place: "Bayswater, London".to_string(),
             distance_to_focus_km: None,
