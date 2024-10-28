@@ -125,7 +125,6 @@ impl What3words {
         bounding_box: BoundingBox,
     ) -> Result<T> {
         let mut params = HashMap::new();
-        println!("TEST {:?}", bounding_box.to_string());
         params.insert("bounding-box", bounding_box.to_string());
         let url = format!("{}/grid-section", self.host);
         params.insert("format", T::format().to_string());
