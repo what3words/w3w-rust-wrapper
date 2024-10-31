@@ -6,7 +6,7 @@ use std::{collections::HashMap, fmt};
 #[derive(Debug, Clone)]
 pub struct Autosuggest {
     pub input: Option<String>,
-    pub n_result: Option<String>,
+    pub n_results: Option<String>,
     pub focus: Option<String>,
     pub n_focus_result: Option<String>,
     pub clip_to_country: Option<String>,
@@ -23,37 +23,37 @@ impl ToHashMap for Autosuggest {
     fn to_hash_map<'a>(&self) -> HashMap<&'a str, String> {
         let mut map = HashMap::new();
         if let Some(ref input) = &self.input {
-            map.insert("input", input.clone());
+            map.insert("input", input.into());
         }
-        if let Some(ref n_result) = &self.n_result {
-            map.insert("n-result", n_result.clone());
+        if let Some(ref n_results) = &self.n_results {
+            map.insert("n-results", n_results.into());
         }
         if let Some(ref focus) = &self.focus {
-            map.insert("focus", focus.clone());
+            map.insert("focus", focus.into());
         }
         if let Some(ref n_focus_result) = &self.n_focus_result {
-            map.insert("n-focus-result", n_focus_result.clone());
+            map.insert("n-focus-result", n_focus_result.into());
         }
         if let Some(ref clip_to_country) = &self.clip_to_country {
-            map.insert("clip-to-country", clip_to_country.clone());
+            map.insert("clip-to-country", clip_to_country.into());
         }
         if let Some(ref clip_to_bounding_box) = &self.clip_to_bounding_box {
-            map.insert("clip-to-bounding-box", clip_to_bounding_box.clone());
+            map.insert("clip-to-bounding-box", clip_to_bounding_box.into());
         }
         if let Some(ref clip_to_circle) = &self.clip_to_circle {
-            map.insert("clip-to-circle", clip_to_circle.clone());
+            map.insert("clip-to-circle", clip_to_circle.into());
         }
         if let Some(ref clip_to_polygon) = &self.clip_to_polygon {
-            map.insert("clip-to-polygon", clip_to_polygon.clone());
+            map.insert("clip-to-polygon", clip_to_polygon.into());
         }
         if let Some(ref input_type) = &self.input_type {
-            map.insert("input-type", input_type.clone());
+            map.insert("input-type", input_type.into());
         }
         if let Some(ref language) = &self.language {
-            map.insert("language", language.clone());
+            map.insert("language", language.into());
         }
         if let Some(ref locale) = &self.locale {
-            map.insert("locale", locale.clone());
+            map.insert("locale", locale.into());
         }
         if let Some(ref prefer_land) = &self.prefer_land {
             map.insert("prefer-land", prefer_land.to_string());
@@ -66,7 +66,7 @@ impl Autosuggest {
     pub fn new(input: impl Into<String>) -> Self {
         Self {
             input: Some(input.into()),
-            n_result: None,
+            n_results: None,
             focus: None,
             n_focus_result: None,
             clip_to_country: None,
@@ -79,8 +79,8 @@ impl Autosuggest {
             locale: None,
         }
     }
-    pub fn n_result(mut self, n_result: impl Into<String>) -> Self {
-        self.n_result = Some(n_result.into());
+    pub fn n_results(mut self, n_results: impl Into<String>) -> Self {
+        self.n_results = Some(n_results.into());
         self
     }
 
@@ -198,4 +198,106 @@ pub struct Suggestion {
 #[derive(Debug, Deserialize)]
 pub struct AutosuggestResult {
     pub suggestions: Vec<Suggestion>,
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_autosuggest_display() {
+        let autosuggest = Autosuggest::new("test input")
+            .n_results("5")
+            .focus(Coordinates {
+                lat: 51.521251,
+                lng: -0.203586,
+            })
+            .n_focus_result("3")
+            .clip_to_country("GB")
+            .clip_to_bounding_box("51.521251,-0.203586,51.521251,-0.203586")
+            .clip_to_circle("51.521251,-0.203586,1000")
+            .clip_to_polygon("51.521251,-0.203586,51.521251,-0.203586,51.521251,-0.203586")
+            .input_type("text")
+            .language("en")
+            .prefer_land(true)
+            .locale("en-GB");
+
+        assert_eq!(
+                    format!("{}", autosuggest),
+                    "Autosuggest { input: Some(\"test input\"), n_results: Some(\"5\"), focus: Some(\"51.521251,-0.203586\"), n_focus_result: Some(\"3\"), clip_to_country: Some(\"GB\"), clip_to_bounding_box: Some(\"51.521251,-0.203586,51.521251,-0.203586\"), clip_to_circle: Some(\"51.521251,-0.203586,1000\"), clip_to_polygon: Some(\"51.521251,-0.203586,51.521251,-0.203586,51.521251,-0.203586\"), input_type: Some(\"text\"), language: Some(\"en\"), prefer_land: Some(true), locale: Some(\"en-GB\") }"
+                );
+    }
+
+    #[test]
+    fn test_autosuggest_to_hash_map() {
+        let autosuggest = Autosuggest::new("test input")
+            .n_results("5")
+            .focus(Coordinates {
+                lat: 51.521251,
+                lng: -0.203586,
+            })
+            .n_focus_result("3")
+            .clip_to_country("GB")
+            .clip_to_bounding_box("51.521251,-0.203586,51.521251,-0.203586")
+            .clip_to_circle("51.521251,-0.203586,1000")
+            .clip_to_polygon("51.521251,-0.203586,51.521251,-0.203586,51.521251,-0.203586")
+            .input_type("text")
+            .language("en")
+            .prefer_land(true)
+            .locale("en-GB");
+
+        let map = autosuggest.to_hash_map();
+        assert_eq!(map.get("input"), Some(&"test input".to_string()));
+        assert_eq!(map.get("n-results"), Some(&"5".to_string()));
+        assert_eq!(map.get("focus"), Some(&"51.521251,-0.203586".to_string()));
+        assert_eq!(map.get("n-focus-result"), Some(&"3".to_string()));
+        assert_eq!(map.get("clip-to-country"), Some(&"GB".to_string()));
+        assert_eq!(
+            map.get("clip-to-bounding-box"),
+            Some(&"51.521251,-0.203586,51.521251,-0.203586".to_string())
+        );
+        assert_eq!(
+            map.get("clip-to-circle"),
+            Some(&"51.521251,-0.203586,1000".to_string())
+        );
+        assert_eq!(
+            map.get("clip-to-polygon"),
+            Some(&"51.521251,-0.203586,51.521251,-0.203586,51.521251,-0.203586".to_string())
+        );
+        assert_eq!(map.get("input-type"), Some(&"text".to_string()));
+        assert_eq!(map.get("language"), Some(&"en".to_string()));
+        assert_eq!(map.get("prefer-land"), Some(&"true".to_string()));
+        assert_eq!(map.get("locale"), Some(&"en-GB".to_string()));
+    }
+
+    #[test]
+    fn test_autosuggest_selection_to_hash_map() {
+        let suggestion = Suggestion {
+            country: "GB".to_string(),
+            nearest_place: "London".to_string(),
+            words: "index.home.raft".to_string(),
+            rank: 1,
+            language: "en".to_string(),
+            distance_to_focus_km: Some(10),
+            square: None,
+            coordinates: None,
+            map: None,
+        };
+
+        let autosuggest = Autosuggest::new("test input")
+            .n_results("5")
+            .focus(Coordinates {
+                lat: 51.521251,
+                lng: -0.203586,
+            });
+
+        let selection = AutosuggestSelection::new("test input", &suggestion).options(&autosuggest);
+
+        let map = selection.to_hash_map();
+        assert_eq!(map.get("raw-input"), Some(&"test input".to_string()));
+        assert_eq!(map.get("rank"), Some(&"1".to_string()));
+        assert_eq!(map.get("selection"), Some(&"index.home.raft".to_string()));
+        assert_eq!(map.get("input"), Some(&"test input".to_string()));
+        assert_eq!(map.get("n-results"), Some(&"5".to_string()));
+        assert_eq!(map.get("focus"), Some(&"51.521251,-0.203586".to_string()));
+    }
 }
