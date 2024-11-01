@@ -1,12 +1,12 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct Error {
+pub(crate) struct Error {
     pub code: String,
     pub message: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ErrorResult {
+pub(crate) struct ErrorResult {
     pub error: Error,
 }

@@ -11,7 +11,7 @@ use reqwest::{blocking::Client, Client as ClientAsync};
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, env, fmt};
 
-pub trait ToHashMap {
+pub(crate) trait ToHashMap {
     fn to_hash_map<'a>(&self) -> HashMap<&'a str, String>;
 }
 
@@ -19,7 +19,7 @@ pub trait ToHashMap {
 pub enum Error {
     Network(String),
     Http(String),
-    Api(ErrorResult),
+    Api(String, String),
     Decode(String),
     Unknown(String),
 }
@@ -29,8 +29,8 @@ impl fmt::Display for Error {
         match self {
             Error::Network(msg) => write!(f, "Network error: {}", msg),
             Error::Http(msg) => write!(f, "HTTP error: {}", msg),
-            Error::Api(res) => {
-                write!(f, "W3W error: {} {}", res.error.code, res.error.message)
+            Error::Api(code, message) => {
+                write!(f, "W3W error: {} {}", code, message)
             }
             Error::Decode(msg) => write!(f, "Decode error: {}", msg),
             Error::Unknown(msg) => write!(f, "Unknown error: {}", msg),
@@ -54,7 +54,7 @@ impl From<reqwest::Error> for Error {
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub(crate) type Result<T> = std::result::Result<T, Error>;
 
 const DEFAULT_W3W_API_BASE_URL: &str = "https://api.what3words.com/v3";
 const HEADER_WHAT3WORDS_API_KEY: &str = "X-Api-Key";
@@ -284,7 +284,10 @@ impl What3words {
 
         if !response.status().is_success() {
             let error_response = response.json::<ErrorResult>().map_err(Error::from)?;
-            return Err(Error::Api(error_response));
+            return Err(Error::Api(
+                error_response.error.code,
+                error_response.error.message,
+            ));
         }
         match response.content_length() {
             // Captures successful responses with no content
@@ -310,7 +313,10 @@ impl What3words {
 
         if !response.status().is_success() {
             let error_response = response.json::<ErrorResult>().await.map_err(Error::from)?;
-            return Err(Error::Api(error_response));
+            return Err(Error::Api(
+                error_response.error.code,
+                error_response.error.message,
+            ));
         }
         match response.content_length() {
             // Captures successful responses with no content
@@ -367,7 +373,7 @@ mod tests {
                 message: String::from("Bad Request"),
             },
         };
-        let api_error = Error::Api(error_result);
+        let api_error = Error::Api(error_result.error.code, error_result.error.message);
         assert_eq!(format!("{}", api_error), "W3W error: 400 Bad Request");
 
         let decode_error = Error::Decode(String::from("Invalid JSON"));

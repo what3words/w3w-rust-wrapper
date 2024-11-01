@@ -2,10 +2,10 @@ use std::env;
 
 use what3words::{
     Address, AddressGeoJson, Autosuggest, AutosuggestSelection, BoundingBox, ConvertTo3wa,
-    ConvertToCoordinates, Coordinates, GridSection, GridSectionGeoJson, What3words,
+    ConvertToCoordinates, Coordinates, Error, GridSection, GridSectionGeoJson, What3words,
 };
 
-fn main() -> what3words::Result<()> {
+fn main() -> Result<(), Error> {
     let api_key = env::var("W3W_API_KEY").expect(
         "Please ensure that W3W_API_KEY is added to your environment variables.\nRun `W3W_API_KEY=<YOUR_API_KEY> cargo run --example wrapper-demo` from bash/zsh or `$Env:W3W_API_KEY=<YOUR_API_KEY>; cargo run --example wrapper-demo` from PowerShell.",
     );

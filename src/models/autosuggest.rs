@@ -199,6 +199,7 @@ pub struct Suggestion {
 pub struct AutosuggestResult {
     pub suggestions: Vec<Suggestion>,
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
