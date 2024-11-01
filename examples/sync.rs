@@ -101,6 +101,6 @@ fn main() -> Result<(), Error> {
     let find_possible_3wa: Vec<String> = w3w.find_possible_3wa("Please leave by my porch");
     println!("find_possible_3wa [4]: {:?}", find_possible_3wa);
     let find_possible_3wa = w3w.find_possible_3wa("This is a test with filled count soap in it.");
-    println!("find_possible_3wa [5]: {:?}", find_possible_3wa.len());
+    println!("find_possible_3wa [5]: {:?}", find_possible_3wa);
     Ok(())
 }
