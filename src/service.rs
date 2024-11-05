@@ -935,8 +935,8 @@ mod sync_tests {
     }
 }
 
-#[cfg(not(feature = "sync"))]
 #[cfg(test)]
+#[cfg(not(feature = "sync"))]
 mod async_tests {
     use super::*;
     use crate::{
