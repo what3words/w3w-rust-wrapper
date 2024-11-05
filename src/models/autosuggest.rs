@@ -201,7 +201,7 @@ pub struct AutosuggestResult {
 }
 
 #[cfg(test)]
-mod tests {
+mod autosuggest_tests {
     use super::*;
 
     #[test]

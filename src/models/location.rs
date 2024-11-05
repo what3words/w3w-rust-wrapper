@@ -151,7 +151,7 @@ impl FormattedAddress for AddressGeoJson {
 }
 
 #[cfg(test)]
-mod tests {
+mod location_tests {
     use super::*;
 
     #[test]

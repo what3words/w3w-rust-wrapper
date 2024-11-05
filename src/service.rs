@@ -7,9 +7,9 @@ use crate::models::{
 };
 use http::{HeaderMap, HeaderName, HeaderValue};
 use regex::Regex;
-#[cfg(not(feature = "async"))]
+#[cfg(feature = "sync")]
 use reqwest::blocking::Client;
-#[cfg(feature = "async")]
+#[cfg(not(feature = "sync"))]
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, env, fmt};
@@ -104,7 +104,7 @@ impl What3words {
         self
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn convert_to_3wa<T: FormattedAddress + DeserializeOwned>(
         &self,
         options: &ConvertTo3wa,
@@ -115,7 +115,7 @@ impl What3words {
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn convert_to_3wa<T: FormattedAddress + DeserializeOwned>(
         &self,
         options: &ConvertTo3wa,
@@ -126,7 +126,7 @@ impl What3words {
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn convert_to_coordinates<T: FormattedAddress + DeserializeOwned>(
         &self,
         options: &ConvertToCoordinates,
@@ -137,7 +137,7 @@ impl What3words {
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn convert_to_coordinates<T: FormattedAddress + DeserializeOwned>(
         &self,
         options: &ConvertToCoordinates,
@@ -148,19 +148,19 @@ impl What3words {
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
         self.request(url, None)
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn available_languages(&self) -> Result<AvailableLanguages> {
         let url = format!("{}/available-languages", self.host);
         self.request(url, None).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn grid_section<T: DeserializeOwned + FormattedGridSection>(
         &self,
         bounding_box: &BoundingBox,
@@ -172,7 +172,7 @@ impl What3words {
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn grid_section<T: DeserializeOwned + FormattedGridSection>(
         &self,
         bounding_box: &BoundingBox,
@@ -184,21 +184,21 @@ impl What3words {
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest", self.host);
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
         let params = autosuggest.clone().to_hash_map();
         let url = format!("{}/autosuggest", self.host);
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn autosuggest_with_coordinates(
         &self,
         autosuggest: &Autosuggest,
@@ -208,7 +208,7 @@ impl What3words {
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn autosuggest_with_coordinates(
         &self,
         autosuggest: &Autosuggest,
@@ -218,21 +218,21 @@ impl What3words {
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params))
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params)).await
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     pub fn is_valid_3wa(&self, input: impl Into<String>) -> bool {
         let input_str = input.into();
         if self.is_possible_3wa(&input_str) {
@@ -246,7 +246,7 @@ impl What3words {
         false
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     pub async fn is_valid_3wa(&self, input: impl Into<String>) -> bool {
         let input_str = input.into();
         if self.is_possible_3wa(&input_str) {
@@ -287,7 +287,7 @@ impl What3words {
             .collect()
     }
 
-    #[cfg(not(feature = "async"))]
+    #[cfg(feature = "sync")]
     fn request<T: DeserializeOwned>(
         &self,
         url: String,
@@ -316,7 +316,7 @@ impl What3words {
         }
     }
 
-    #[cfg(feature = "async")]
+    #[cfg(not(feature = "sync"))]
     async fn request<T: DeserializeOwned>(
         &self,
         url: String,
@@ -347,9 +347,9 @@ impl What3words {
     }
 }
 
-#[cfg(not(feature = "async"))]
 #[cfg(test)]
-mod tests {
+#[cfg(feature = "sync")]
+mod sync_tests {
     use super::*;
     use crate::{
         models::{
@@ -448,7 +448,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_3wa(ConvertTo3wa::new(51.521251, -0.203586))
+            .convert_to_3wa(&ConvertTo3wa::new(51.521251, -0.203586))
             .unwrap();
         mock.assert();
         assert_eq!(result.words, words);
@@ -494,7 +494,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new(words))
+            .convert_to_coordinates(&ConvertToCoordinates::new(words))
             .unwrap();
         mock.assert();
         assert_eq!(result.coordinates.lng, -0.203586);
@@ -526,7 +526,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: std::result::Result<Address, Error> =
-            w3w.convert_to_coordinates::<Address>(ConvertToCoordinates::new(bad_words));
+            w3w.convert_to_coordinates::<Address>(&ConvertToCoordinates::new(bad_words));
         mock.assert();
         assert!(result.is_err());
         let error = result.err().unwrap();
@@ -575,7 +575,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new(words).locale("mn_la"))
+            .convert_to_coordinates(&ConvertToCoordinates::new(words).locale("mn_la"))
             .unwrap();
         mock.assert();
         assert_eq!(result.words, words);
@@ -629,7 +629,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: AddressGeoJson = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new(words))
+            .convert_to_coordinates(&ConvertToCoordinates::new(words))
             .unwrap();
         mock.assert();
         let bbox = result.features[0].bbox.as_ref().unwrap();
@@ -709,7 +709,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: GridSection = w3w
-            .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.11754))
+            .grid_section(&BoundingBox::new(52.207988, 0.116126, 52.208867, 0.11754))
             .unwrap();
         mock.assert();
         assert_eq!(result.lines.len(), 1);
@@ -814,7 +814,7 @@ mod tests {
             language: "en".to_string(),
             map: None,
         };
-        let result = w3w.autosuggest_selection(AutosuggestSelection::new("i.h.r", &suggestion));
+        let result = w3w.autosuggest_selection(&AutosuggestSelection::new("i.h.r", &suggestion));
         mock.assert();
         assert!(result.is_ok());
     }
@@ -935,9 +935,9 @@ mod tests {
     }
 }
 
-#[cfg(feature = "async")]
+#[cfg(not(feature = "sync"))]
 #[cfg(test)]
-mod tests {
+mod async_tests {
     use super::*;
     use crate::{
         models::{

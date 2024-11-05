@@ -324,6 +324,20 @@ $ W3W_API_KEY=<YOUR_API_KEY> cargo run --example sync --features="sync"
 $ W3W_API_KEY=<YOUR_API_KEY> cargo run --example async --features="async"
 ```
 
+## Tests
+
+To run the tests, simple run either of the following:
+
+```bash
+# Blocking
+cargo test --features="sync" --lib
+```
+
+```bash
+# Non-blocking
+cargo test --features="async" --lib
+```
+
 ## Issues
 
 Found a bug or want to request a new feature? Please let us know by submitting an issue.
