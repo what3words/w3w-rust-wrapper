@@ -1,0 +1,38 @@
+[package]
+name = "what3words"
+description = "what3words API wrapper for rust"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+homepage = "https://developer.what3words.com"
+readme = "README.md"
+repository = "https://github.com/what3words/w3w-rust-wrapper.git"
+exclude = [
+    "examples/*",
+]
+
+[dependencies]
+http = "1.1.0"
+regex = "1.11.0"
+reqwest = { version = "0.12.8", optional = true, features = ["json"] }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
+
+[features]
+default = ["async"]
+async = ["reqwest"]
+sync = ["reqwest/blocking"]
+
+[[example]]
+name = "sync"
+path = "examples/sync.rs"
+required-features = ["sync"]
+
+[[example]]
+name = "async"
+path = "examples/async.rs"
+required-features = ["async"]
+
+[dev-dependencies]
+mockito = "1.5.0"
+tokio = { version = "1.40.0", features = ["full"] }
