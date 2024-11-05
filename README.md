@@ -341,7 +341,7 @@ Anyone and everyone is welcome to contribute.
 
 ## Revision History
 
-- `0.1.0` 16/10/24 - Initial release
+- `0.1.0` 05/11/24 - Initial release
 
 ## Licensing
 
