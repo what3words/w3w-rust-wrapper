@@ -107,7 +107,7 @@ impl What3words {
     #[cfg(not(feature = "async"))]
     pub fn convert_to_3wa<T: FormattedAddress + DeserializeOwned>(
         &self,
-        options: ConvertTo3wa,
+        options: &ConvertTo3wa,
     ) -> Result<T> {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = options.to_hash_map();
@@ -118,7 +118,7 @@ impl What3words {
     #[cfg(feature = "async")]
     pub async fn convert_to_3wa<T: FormattedAddress + DeserializeOwned>(
         &self,
-        options: ConvertTo3wa,
+        options: &ConvertTo3wa,
     ) -> Result<T> {
         let url = format!("{}/convert-to-3wa", self.host);
         let mut params = options.to_hash_map();
@@ -129,7 +129,7 @@ impl What3words {
     #[cfg(not(feature = "async"))]
     pub fn convert_to_coordinates<T: FormattedAddress + DeserializeOwned>(
         &self,
-        options: ConvertToCoordinates,
+        options: &ConvertToCoordinates,
     ) -> Result<T> {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = options.to_hash_map();
@@ -140,7 +140,7 @@ impl What3words {
     #[cfg(feature = "async")]
     pub async fn convert_to_coordinates<T: FormattedAddress + DeserializeOwned>(
         &self,
-        options: ConvertToCoordinates,
+        options: &ConvertToCoordinates,
     ) -> Result<T> {
         let url = format!("{}/convert-to-coordinates", self.host);
         let mut params = options.to_hash_map();
@@ -163,7 +163,7 @@ impl What3words {
     #[cfg(not(feature = "async"))]
     pub fn grid_section<T: DeserializeOwned + FormattedGridSection>(
         &self,
-        bounding_box: BoundingBox,
+        bounding_box: &BoundingBox,
     ) -> Result<T> {
         let mut params = HashMap::new();
         params.insert("bounding-box", bounding_box.to_string());
@@ -175,7 +175,7 @@ impl What3words {
     #[cfg(feature = "async")]
     pub async fn grid_section<T: DeserializeOwned + FormattedGridSection>(
         &self,
-        bounding_box: BoundingBox,
+        bounding_box: &BoundingBox,
     ) -> Result<T> {
         let mut params = HashMap::new();
         params.insert("bounding-box", bounding_box.to_string());
@@ -219,14 +219,14 @@ impl What3words {
     }
 
     #[cfg(not(feature = "async"))]
-    pub fn autosuggest_selection(&self, selection: AutosuggestSelection) -> Result<()> {
+    pub fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params))
     }
 
     #[cfg(feature = "async")]
-    pub async fn autosuggest_selection(&self, selection: AutosuggestSelection) -> Result<()> {
+    pub async fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
         let params = selection.to_hash_map();
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params)).await
@@ -989,7 +989,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_3wa(ConvertTo3wa::new(51.521251, -0.203586))
+            .convert_to_3wa(&ConvertTo3wa::new(51.521251, -0.203586))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -1036,7 +1036,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: Address = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new(words))
+            .convert_to_coordinates(&ConvertToCoordinates::new(words))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -1069,7 +1069,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: std::result::Result<Address, Error> = w3w
-            .convert_to_coordinates::<Address>(ConvertToCoordinates::new(bad_words))
+            .convert_to_coordinates::<Address>(&ConvertToCoordinates::new(bad_words))
             .await;
         mock.assert_async().await;
         assert!(result.is_err());
@@ -1123,7 +1123,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: AddressGeoJson = w3w
-            .convert_to_coordinates(ConvertToCoordinates::new("filled.count.soap"))
+            .convert_to_coordinates(&ConvertToCoordinates::new("filled.count.soap"))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -1204,7 +1204,7 @@ mod tests {
 
         let w3w = What3words::new("TEST_API_KEY").hostname(&url);
         let result: GridSection = w3w
-            .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.11754))
+            .grid_section(&BoundingBox::new(52.207988, 0.116126, 52.208867, 0.11754))
             .await
             .unwrap();
         mock.assert_async().await;
@@ -1313,7 +1313,7 @@ mod tests {
             map: None,
         };
         let result = w3w
-            .autosuggest_selection(AutosuggestSelection::new("i.h.r", &suggestion))
+            .autosuggest_selection(&AutosuggestSelection::new("i.h.r", &suggestion))
             .await;
         mock.assert_async().await;
         assert!(result.is_ok());

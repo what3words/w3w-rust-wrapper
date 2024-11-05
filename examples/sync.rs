@@ -13,26 +13,26 @@ fn main() -> Result<(), Error> {
     let words = "filled.count.soap";
     // ------ CONVERT TO COORDINATES/3WA ------
     // ------ Error ------
-    let address = w3w.convert_to_coordinates::<Address>(ConvertToCoordinates::new("filled.count"));
+    let address = w3w.convert_to_coordinates::<Address>(&ConvertToCoordinates::new("filled.count"));
     match address {
         Ok(address) => println!("Address {:?}", address),
         Err(error) => println!("Error {:?}", error),
     }
     // -------------------
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address: Address = w3w.convert_to_coordinates(convert_to_coordinates)?;
+    let address: Address = w3w.convert_to_coordinates(&convert_to_coordinates)?;
     println!("Convert to Coordinates Json Format");
     println!("{:?}", address);
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address: AddressGeoJson = w3w.convert_to_coordinates(convert_to_coordinates)?;
+    let address: AddressGeoJson = w3w.convert_to_coordinates(&convert_to_coordinates)?;
     println!("Convert to Coordinates GeoJson Format");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address: Address = w3w.convert_to_3wa(convert_to_3wa)?;
+    let address: Address = w3w.convert_to_3wa(&convert_to_3wa)?;
     println!("Convert to 3WA Json Format");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address: AddressGeoJson = w3w.convert_to_3wa(convert_to_3wa)?;
+    let address: AddressGeoJson = w3w.convert_to_3wa(&convert_to_3wa)?;
     println!("Convert to 3WA GeoJson Format");
     println!("{:?}", address);
 
@@ -42,16 +42,16 @@ fn main() -> Result<(), Error> {
     println!("{:?}", languages.languages);
     // ------ GRID SECTION ------
     let grid_section_json: GridSection =
-        w3w.grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))?;
+        w3w.grid_section(&BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))?;
     println!("Grid Section Json Format");
     println!("{:?}", grid_section_json);
     let grid_section_geojson: GridSectionGeoJson =
-        w3w.grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))?;
+        w3w.grid_section(&BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))?;
     println!("Grid Section GeoJson Format");
     println!("{:?}", grid_section_geojson);
     // ------ AUTOSUGGEST ------
     let autosuggest_option =
-        Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
+        Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
     let autosuggest = w3w.autosuggest(&autosuggest_option)?;
     println!("Autosuggest");
     println!("{:?} ", autosuggest);
@@ -65,7 +65,7 @@ fn main() -> Result<(), Error> {
     // ------ AUTOSUGGEST SELECTION ------
     let selected = autosuggest.suggestions.first().expect("Not found");
     match w3w.autosuggest_selection(
-        AutosuggestSelection::new("f.f.f", selected).options(&autosuggest_option),
+        &AutosuggestSelection::new("f.f.f", selected).options(&autosuggest_option),
     ) {
         Ok(_) => println!("Suggested selection sent"),
         Err(err) => println!("{:?}", err),

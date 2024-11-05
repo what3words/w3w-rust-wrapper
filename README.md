@@ -87,11 +87,11 @@ use what3words::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
 let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
-let address_json: Address = w3w.convert_to_coordinates::<Address>(convert_to_coordinates);
+let address_json: Address = w3w.convert_to_coordinates::<Address>(&convert_to_coordinates);
 println!("{:?}", address_json.coordinates); // Coordinates { lat: 51.520847, lng: -0.195521 }
 
 let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
-let address_geojson: AddressGeoJson = w3w.convert_to_coordinates::<AddressGeoJson>(convert_to_coordinates);
+let address_geojson: AddressGeoJson = w3w.convert_to_coordinates::<AddressGeoJson>(&convert_to_coordinates);
 println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
 ```
 
@@ -120,11 +120,11 @@ let w3w = What3words::new("YOUR_API_KEY_HERE");
 
 
 let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-let address_json: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa);
+let address_json: Address = w3w.convert_to_3wa::<Address>(&convert_to_3wa);
 println!("{:?}", address_json.words); // "filled.count.soap"
 
 let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-let address_geojson: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa);
+let address_geojson: Address = w3w.convert_to_3wa::<Address>(&convert_to_3wa);
 println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
 ```
 
@@ -169,7 +169,7 @@ The instance of `what3words::Autosuggest` also allows you to set optional parame
 Example:
 
 ```rust
-let autosuggest = what3words::Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
+let autosuggest = what3words::Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
 ```
 
 Example:
@@ -179,7 +179,7 @@ use what3words::{Autosuggest, AutosuggestResult, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-let autosuggest_option = Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
+let autosuggest_option = Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
 let autosuggest: AutosuggestResult = w3w.autosuggest(&autosuggest_option);
 println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
 ```
@@ -199,10 +199,10 @@ use what3words::{BoundingBox, GridSection, GridSectionGeoJson, What3words};
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
 let grid_section_json: GridSection = w3w
-        .grid_section::<GridSection>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
+        .grid_section::<GridSection>(&BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
 println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
 let grid_section_geojson: GridSectionGeoJson = w3w
-    .grid_section::<GridSectionGeoJson>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
+    .grid_section::<GridSectionGeoJson>(&BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
 println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
 ```
 

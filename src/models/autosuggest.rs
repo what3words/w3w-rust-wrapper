@@ -84,7 +84,7 @@ impl Autosuggest {
         self
     }
 
-    pub fn focus(mut self, focus: Coordinates) -> Self {
+    pub fn focus(mut self, focus: &Coordinates) -> Self {
         self.focus = Some(focus.to_string());
         self
     }
@@ -208,7 +208,7 @@ mod tests {
     fn test_autosuggest_display() {
         let autosuggest = Autosuggest::new("test input")
             .n_results("5")
-            .focus(Coordinates {
+            .focus(&Coordinates {
                 lat: 51.521251,
                 lng: -0.203586,
             })
@@ -232,7 +232,7 @@ mod tests {
     fn test_autosuggest_to_hash_map() {
         let autosuggest = Autosuggest::new("test input")
             .n_results("5")
-            .focus(Coordinates {
+            .focus(&Coordinates {
                 lat: 51.521251,
                 lng: -0.203586,
             })
@@ -286,7 +286,7 @@ mod tests {
 
         let autosuggest = Autosuggest::new("test input")
             .n_results("5")
-            .focus(Coordinates {
+            .focus(&Coordinates {
                 lat: 51.521251,
                 lng: -0.203586,
             });
