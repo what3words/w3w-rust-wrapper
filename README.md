@@ -320,6 +320,9 @@ Examples can be found in `/examples` directory, simply run the following to try 
 ```bash
 # Blocking
 $ W3W_API_KEY=<YOUR_API_KEY> cargo run --example sync --features="sync"
+```
+
+```bash
 # Non-blocking
 $ W3W_API_KEY=<YOUR_API_KEY> cargo run --example async --features="async"
 ```
