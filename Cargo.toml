@@ -7,6 +7,9 @@ license = "MIT"
 homepage = "https://developer.what3words.com"
 readme = "README.md"
 repository = "https://github.com/what3words/w3w-rust-wrapper.git"
+exclude = [
+    "examples/*",
+]
 
 [dependencies]
 http = "1.1.0"
