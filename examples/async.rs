@@ -15,7 +15,7 @@ async fn main() -> Result<(), what3words::Error> {
     // ------ CONVERT TO COORDINATES/3WA ------
     // ------ Error ------
     let address = w3w
-        .convert_to_coordinates_async::<Address>(ConvertToCoordinates::new("filled.count"))
+        .convert_to_coordinates::<Address>(ConvertToCoordinates::new("filled.count"))
         .await;
     match address {
         Ok(address) => println!("Address {:?}", address),
@@ -23,38 +23,34 @@ async fn main() -> Result<(), what3words::Error> {
     }
     // -------------------
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address: Address = w3w
-        .convert_to_coordinates_async(convert_to_coordinates)
-        .await?;
+    let address: Address = w3w.convert_to_coordinates(convert_to_coordinates).await?;
     println!("Convert to Coordinates Json Format (async)");
     println!("{:?}", address);
     let convert_to_coordinates = ConvertToCoordinates::new(words);
-    let address: AddressGeoJson = w3w
-        .convert_to_coordinates_async(convert_to_coordinates)
-        .await?;
+    let address: AddressGeoJson = w3w.convert_to_coordinates(convert_to_coordinates).await?;
     println!("Convert to Coordinates GeoJson Format (async)");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address: Address = w3w.convert_to_3wa_async(convert_to_3wa).await?;
+    let address: Address = w3w.convert_to_3wa(convert_to_3wa).await?;
     println!("Convert to 3WA Json Format (async)");
     println!("{:?}", address);
     let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-    let address: AddressGeoJson = w3w.convert_to_3wa_async(convert_to_3wa).await?;
+    let address: AddressGeoJson = w3w.convert_to_3wa(convert_to_3wa).await?;
     println!("Convert to 3WA GeoJson Format (async)");
     println!("{:?}", address);
     // ------ ALL AVAILABLE LANGUAGES ------
-    let languages = w3w.available_languages_async().await?;
+    let languages = w3w.available_languages().await?;
     println!("Available Languages (async)");
     println!("{:?}", languages.languages);
     // ------ GRID SECTION ------
     let grid_section_json: GridSection = w3w
-        .grid_section_async(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
+        .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
         .await?;
     println!("Grid Section Json Format (async)");
     println!("{:?}", grid_section_json);
 
     let grid_section_geojson: GridSectionGeoJson = w3w
-        .grid_section_async(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
+        .grid_section(BoundingBox::new(52.207988, 0.116126, 52.208867, 0.117540))
         .await?;
     println!("Grid Section GeoJson Format (async)");
     println!("{:?}", grid_section_geojson);
@@ -62,14 +58,12 @@ async fn main() -> Result<(), what3words::Error> {
     // ------ AUTOSUGGEST ------
     let autosuggest_option =
         Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
-    let autosuggest = w3w.autosuggest_async(&autosuggest_option).await?;
+    let autosuggest = w3w.autosuggest(&autosuggest_option).await?;
     println!("Autosuggest (async)");
     println!("{:?} ", autosuggest);
 
     // ------ AUTOSUGGEST WITH COORDINATES ------
-    let autosuggest_with_coordinates = w3w
-        .autosuggest_with_coordinates_async(&autosuggest_option)
-        .await;
+    let autosuggest_with_coordinates = w3w.autosuggest_with_coordinates(&autosuggest_option).await;
     println!("Autosuggest with Coordinates (async)");
     match autosuggest_with_coordinates {
         Ok(autosuggest_with_coordinates) => println!("{:?}", autosuggest_with_coordinates),
@@ -78,7 +72,7 @@ async fn main() -> Result<(), what3words::Error> {
     // ------ AUTOSUGGEST SELECTION ------
     let selected = autosuggest.suggestions.first().expect("Not found");
     match w3w
-        .autosuggest_selection_async(
+        .autosuggest_selection(
             AutosuggestSelection::new("f.f.f", selected).options(&autosuggest_option),
         )
         .await
@@ -87,12 +81,12 @@ async fn main() -> Result<(), what3words::Error> {
         Err(err) => println!("{:?}", err),
     };
     // ------ HELPER FUNCTIONS ------
-    let is_valid_3wa: bool = w3w.is_valid_3wa_async("filled.count.soap").await;
-    println!("is_valid_3wa_async [1]: {}", is_valid_3wa);
-    let is_valid_3wa: bool = w3w.is_valid_3wa_async("filled.count.").await;
-    println!("is_valid_3wa_async [2]: {}", is_valid_3wa);
-    let is_valid_3wa: bool = w3w.is_valid_3wa_async("rust.is.cool").await;
-    println!("is_valid_3wa_async [3]: {}", is_valid_3wa);
+    let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.soap").await;
+    println!("is_valid_3wa [1]: {}", is_valid_3wa);
+    let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.").await;
+    println!("is_valid_3wa [2]: {}", is_valid_3wa);
+    let is_valid_3wa: bool = w3w.is_valid_3wa("rust.is.cool").await;
+    println!("is_valid_3wa [3]: {}", is_valid_3wa);
 
     Ok(())
 }

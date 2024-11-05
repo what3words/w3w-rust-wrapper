@@ -28,6 +28,17 @@ To install what3words, simply:
 $ cargo add what3words
 ```
 
+## Features
+
+The functions are asynchronous by default, but this crate supports synchronous functions as well, simply enable `sync` feature when adding the crate to your project.
+
+```bash
+cargo add what3words --features=sync
+```
+
+> [!NOTE]
+> Ensure that you have an async runtime installed such as `tokio` except when `sync` feature is enabled.
+
 # Usage
 
 ## Initialisation
@@ -37,9 +48,6 @@ Once you have the API Key, you can initialise the wrapper like this:
 ```rust
 let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE");
 ```
-
-> [!NOTE]
-> The service provides async functions which depends on async runtimes such as `tokio`.
 
 ### Optional
 
@@ -78,22 +86,12 @@ use what3words::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-// Blocking
 let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
 let address_json: Address = w3w.convert_to_coordinates::<Address>(convert_to_coordinates);
 println!("{:?}", address_json.coordinates); // Coordinates { lat: 51.520847, lng: -0.195521 }
 
 let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
 let address_geojson: AddressGeoJson = w3w.convert_to_coordinates::<AddressGeoJson>(convert_to_coordinates);
-println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
-
-// Non-blocking
-let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
-let address_json: Address = w3w.convert_to_coordinates_async::<Address>(convert_to_coordinates).await?;
-println!("{:?}", address_json.coordinates); // Coordinates { lat: 51.520847, lng: -0.195521 }
-
-let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
-let address_geojson: AddressGeoJson = w3w.convert_to_coordinates_async::<AddressGeoJson>(convert_to_coordinates).await?;
 println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
 ```
 
@@ -121,7 +119,6 @@ use what3words::{Address, AddressGeoJson, ConvertTo3wa, What3words};
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
 
-// Blocking
 let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
 let address_json: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa);
 println!("{:?}", address_json.words); // "filled.count.soap"
@@ -129,16 +126,6 @@ println!("{:?}", address_json.words); // "filled.count.soap"
 let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
 let address_geojson: Address = w3w.convert_to_3wa::<Address>(convert_to_3wa);
 println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
-
-// Non-blocking
-let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-let address_json: Address = w3w.convert_to_3wa_async::<Address>(convert_to_3wa).await?;
-println!("{:?}", address_json.words); // "filled.count.soap"
-
-let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
-let address_geojson: Address = w3w.convert_to_3wa_async::<Address>(convert_to_3wa).await?;
-println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 51.520833], ..., }]
-
 ```
 
 ## AutoSuggest
@@ -192,14 +179,8 @@ use what3words::{Autosuggest, AutosuggestResult, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-// Blocking
 let autosuggest_option = Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
 let autosuggest: AutosuggestResult = w3w.autosuggest(&autosuggest_option);
-println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
-
-// Non-blocking
-let autosuggest_option = Autosuggest::new("filled.count.so").focus(Coordinates::new(51.520847, -0.195521));
-let autosuggest: AutosuggestResult = w3w.autosuggest_async(&autosuggest_option).await?;
 println!("{:?}", autosuggest.suggestions); // [Suggestion { words: "filled.count.soap", ..., ... }, ..., ...]
 ```
 
@@ -217,22 +198,11 @@ use what3words::{BoundingBox, GridSection, GridSectionGeoJson, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
-// Blocking
 let grid_section_json: GridSection = w3w
         .grid_section::<GridSection>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
 println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
 let grid_section_geojson: GridSectionGeoJson = w3w
     .grid_section::<GridSectionGeoJson>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540));
-println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
-
-// Non-blocking
-let grid_section_json: GridSection = w3w
-        .grid_section_async::<GridSection>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540))
-        .await?;
-println!("{:?}", &grid_section_json.lines[0]); // Line { start: Coordinates { lat: 52.20801, lng: 0.116126 }, end: Coordinates { lat: 52.20801, lng: 0.11754 } }
-let grid_section_geojson: GridSectionGeoJson = w3w
-    .grid_section_async::<GridSectionGeoJson>(BoundingBox::new(52.207988,0.116126,52.208867,0.117540))
-    .await?;
 println!("{:?}", &grid_section_geojson.features); // [Features { geometry: ..., }, ..., ..., kind: "Feature"]
 ```
 
@@ -249,14 +219,8 @@ use what3words::{AvailableLanguages, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
-// Blocking
 let available_languages: AvailableLanguages = w3w.available_languages();
 println!("{:?}", available_languages.languages); // [Language { code: "en", ..., ... }, ..., ... ]
-
-// Non-blocking
-let available_languages: AvailableLanguages = w3w.available_languages_async().await?;
-println!("{:?}", available_languages.languages); // [Language { code: "en", ..., ... }, ..., ... ]
-
 ```
 
 ## Helper functions
@@ -341,17 +305,12 @@ use what3words::What3words;
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
-// Blocking
 let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.soap");
 println!("{}", is_valid_3wa); // true
 let is_valid_3wa: bool = w3w.is_valid_3wa("filled.count.");
 println!("{}", is_valid_3wa); // false
 let is_valid_3wa: bool = w3w.is_valid_3wa("rust.is.cool");
 println!("{}", is_valid_3wa); // false
-
-// Non-blocking
-let is_valid_3wa: bool = w3w.is_valid_3wa_async("index.home.raft").await?;
-println!("{}", is_valid_3wa); // true
 ```
 
 ## Examples
@@ -360,9 +319,9 @@ Examples can be found in `/examples` directory, simply run the following to try 
 
 ```bash
 # Blocking
-$ W3W_API_KEY=<YOUR_API_KEY> cargo run --example sync
+$ W3W_API_KEY=<YOUR_API_KEY> cargo run --example sync --features="sync"
 # Non-blocking
-$ W3W_API_KEY=<YOUR_API_KEY> cargo run --example async
+$ W3W_API_KEY=<YOUR_API_KEY> cargo run --example async --features="async"
 ```
 
 ## Issues
