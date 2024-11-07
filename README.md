@@ -70,7 +70,7 @@ This function takes an instance of `what3words::ConvertToCoordinates` which acce
 Example:
 
 ```rust
-let convert_to_coordinates = what3words::ConvertToCoordinates::new("filled.count.soap");
+let convert_to_coordinates = what3words::ConvertToCoordinates::new("filled.count.soap").locale("zh_tr");
 ```
 
 > [!NOTE]
@@ -86,7 +86,7 @@ use what3words::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
-let convert_to_coordinates = ConvertToCoordinates::new("filled.count.soap");
+let convert_to_coordinates = ConvertToCoordinates::new("產權.絕緣.墨鏡").locale("zh_tr");
 let address_json: Address = w3w.convert_to_coordinates::<Address>(&convert_to_coordinates);
 println!("{:?}", address_json.coordinates); // Coordinates { lat: 51.520847, lng: -0.195521 }
 
@@ -102,7 +102,7 @@ This function takes an instance of `what3words::ConvertTo3wa` which accepts a la
 Example:
 
 ```rust
-let convert_to_3wa = what3words::ConvertTo3wa::new(51.520847, -0.195521);
+let convert_to_3wa = what3words::ConvertTo3wa::new(51.520847, -0.195521).language("oo").locale("oo_cy");
 ```
 
 > [!NOTE]
@@ -119,9 +119,9 @@ use what3words::{Address, AddressGeoJson, ConvertTo3wa, What3words};
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
 
-let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
+let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521).language("mn").locale("mn_la");
 let address_json: Address = w3w.convert_to_3wa::<Address>(&convert_to_3wa);
-println!("{:?}", address_json.words); // "filled.count.soap"
+println!("{:?}", address_json.words); // "seruuhen.zemseg.dagaldah"
 
 let convert_to_3wa = ConvertTo3wa::new(51.520847, -0.195521);
 let address_geojson: Address = w3w.convert_to_3wa::<Address>(&convert_to_3wa);
