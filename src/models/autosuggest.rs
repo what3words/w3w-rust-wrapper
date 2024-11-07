@@ -234,7 +234,7 @@ mod autosuggest_tests {
                 51.521251, -0.203586, 51.521251, -0.203586,
             ))
             .clip_to_circle(&Circle::new(51.521251, -0.203586, 1000))
-            .clip_to_polygon(&Polygon::new(vec![
+            .clip_to_polygon(&Polygon::new(&[
                 Coordinates::new(51.521251, -0.203586),
                 Coordinates::new(51.521251, -0.203586),
                 Coordinates::new(51.521251, -0.203581),
@@ -264,7 +264,7 @@ mod autosuggest_tests {
                 51.521251, -0.203586, 51.521251, -0.203586,
             ))
             .clip_to_circle(&Circle::new(51.521251, -0.203586, 1000))
-            .clip_to_polygon(&Polygon::new(vec![
+            .clip_to_polygon(&Polygon::new(&[
                 Coordinates::new(51.521251, -0.203586),
                 Coordinates::new(51.521251, -0.203586),
                 Coordinates::new(51.521251, -0.203586),
@@ -302,7 +302,7 @@ mod autosuggest_tests {
     #[test]
     fn test_autosuggest_validator() {
         // Test valid polygon
-        let autosuggest = Autosuggest::new("test input").clip_to_polygon(&Polygon::new(vec![
+        let autosuggest = Autosuggest::new("test input").clip_to_polygon(&Polygon::new(&[
             Coordinates::new(51.521251, -0.203586),
             Coordinates::new(51.521251, -0.203586),
             Coordinates::new(51.521251, -0.203581),
@@ -310,11 +310,10 @@ mod autosuggest_tests {
         ]));
         assert!(autosuggest.validate().is_ok());
 
-        let invalid_autosuggest =
-            Autosuggest::new("test input").clip_to_polygon(&Polygon::new(vec![
-                Coordinates::new(51.521251, -0.203586),
-                Coordinates::new(51.521251, -0.203586),
-            ]));
+        let invalid_autosuggest = Autosuggest::new("test input").clip_to_polygon(&Polygon::new(&[
+            Coordinates::new(51.521251, -0.203586),
+            Coordinates::new(51.521251, -0.203586),
+        ]));
         assert!(invalid_autosuggest.validate().is_err());
     }
 

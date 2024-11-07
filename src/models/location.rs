@@ -130,8 +130,10 @@ pub struct Polygon {
 }
 
 impl Polygon {
-    pub fn new(coordinates: Vec<Coordinates>) -> Self {
-        Self { coordinates }
+    pub fn new(coordinates: &[Coordinates]) -> Self {
+        Self {
+            coordinates: coordinates.to_vec(),
+        }
     }
 }
 
