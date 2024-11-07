@@ -166,10 +166,28 @@ let autosuggest = what3words::Autosuggest::new("filled.count.so");
 
 The instance of `what3words::Autosuggest` also allows you to set optional parameter(s) (i.e: clipping, focus, etc.):
 
-Example:
+Examples:
+
+#### Focus
 
 ```rust
 let autosuggest = what3words::Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
+```
+
+#### Clipping
+
+```rust
+let autosuggest = what3words::Autosuggest::new("filled.count.so")
+    .clip_to_country(&["GB","US"])
+    .clip_to_bounding_box(&BoundingBox::new(
+        51.521251, -0.203586, 51.521251, -0.203586,
+    ))
+    .clip_to_circle(&Circle::new(51.521251, -0.203586, 1000))
+    .clip_to_polygon(&Polygon::new(&[
+        Coordinates::new(51.521251, -0.203586),
+        Coordinates::new(51.521251, -0.203586),
+        Coordinates::new(51.521251, -0.203581),
+    ]));
 ```
 
 Example:
