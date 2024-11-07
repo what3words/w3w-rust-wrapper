@@ -1,8 +1,6 @@
+use super::gridsection::BoundingBox;
 use super::location::{Circle, Coordinates, Polygon, Square};
-use crate::{
-    service::{Error, ToHashMap, Validator},
-    BoundingBox,
-};
+use crate::service::{Error, ToHashMap, Validator};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt};
 
