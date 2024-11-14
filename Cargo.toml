@@ -1,7 +1,7 @@
 [package]
 name = "what3words-api"
 description = "Official what3words API wrapper for rust"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 homepage = "https://developer.what3words.com"

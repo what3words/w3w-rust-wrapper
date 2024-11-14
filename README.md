@@ -376,7 +376,7 @@ Anyone and everyone is welcome to contribute.
 
 ## Revision History
 
-- `0.1.0` 14/11/24 - Initial release
+- `0.1.1` 14/11/24 - Initial release
 
 ## Licensing
 
