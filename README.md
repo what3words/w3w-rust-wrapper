@@ -2,7 +2,7 @@
 
 # w3w-rust-wrapper
 
-A rust library to use the [what3words v3 API](https://docs.what3words.com/api/v3/).
+The official rust library for [what3words v3 API](https://docs.what3words.com/api/v3/).
 
 API methods are grouped into a single service object which can be centrally managed by a `What3words`instance.
 
@@ -25,7 +25,7 @@ To use this library you’ll need an API key, please visit [https://what3words.c
 To install what3words, simply:
 
 ```bash
-$ cargo add what3words
+$ cargo add what3words-api
 ```
 
 ## Features
@@ -33,7 +33,7 @@ $ cargo add what3words
 The functions are asynchronous by default, but this crate supports synchronous functions as well, simply enable `sync` feature when adding the crate to your project.
 
 ```bash
-cargo add what3words --features=sync
+cargo add what3words-api --features=sync
 ```
 
 > [!NOTE]
@@ -46,7 +46,7 @@ cargo add what3words --features=sync
 Once you have the API Key, you can initialise the wrapper like this:
 
 ```rust
-let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE");
+let wrapper = what3words_api::What3words::new("YOUR_API_KEY_HERE");
 ```
 
 ### Optional
@@ -54,23 +54,23 @@ let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE");
 You can also pass a different hostname if you have your own self-hosted what3words API.
 
 ```rust
-let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE").hostname("https://your.what3words.api/v3");
+let wrapper = what3words_api::What3words::new("YOUR_API_KEY_HERE").hostname("https://your.what3words.api/v3");
 ```
 
 You can also set configure your own headers:
 
 ```rust
-let wrapper = what3words::What3words::new("YOUR_API_KEY_HERE").header("X-Foo", "Bar");
+let wrapper = what3words_api::What3words::new("YOUR_API_KEY_HERE").header("X-Foo", "Bar");
 ```
 
 ## Convert To Coordinates
 
-This function takes an instance of `what3words::ConvertToCoordinates` which accepts a string of 3 words `'filled.count.soap'`.
+This function takes an instance of `what3words_api::ConvertToCoordinates` which accepts a string of 3 words `'filled.count.soap'`.
 
 Example:
 
 ```rust
-let convert_to_coordinates = what3words::ConvertToCoordinates::new("filled.count.soap").locale("zh_tr");
+let convert_to_coordinates = what3words_api::ConvertToCoordinates::new("filled.count.soap").locale("zh_tr");
 ```
 
 > [!NOTE]
@@ -82,7 +82,7 @@ Example:
 > It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `Address` will use `json` (default) and `AddressGeoJson` will use `geojson`.
 
 ```rust
-use what3words::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
+use what3words_api::{Address, AddressGeoJson, ConvertToCoordinates, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
@@ -97,12 +97,12 @@ println!("{:?}", address_geojson.features); // [Feature { bbox: Some[-0.195543, 
 
 ## Convert To 3 Word Address
 
-This function takes an instance of `what3words::ConvertTo3wa` which accepts a latitude and longitude values (i.e.: `51.520847, -0.195521`):
+This function takes an instance of `what3words_api::ConvertTo3wa` which accepts a latitude and longitude values (i.e.: `51.520847, -0.195521`):
 
 Example:
 
 ```rust
-let convert_to_3wa = what3words::ConvertTo3wa::new(51.520847, -0.195521).language("oo").locale("oo_cy");
+let convert_to_3wa = what3words_api::ConvertTo3wa::new(51.520847, -0.195521).language("oo").locale("oo_cy");
 ```
 
 > [!NOTE]
@@ -114,7 +114,7 @@ Example:
 > It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `Address` will use `json` (default) and `AddressGeoJson` will use `geojson`.
 
 ```rust
-use what3words::{Address, AddressGeoJson, ConvertTo3wa, What3words};
+use what3words_api::{Address, AddressGeoJson, ConvertTo3wa, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
@@ -156,28 +156,28 @@ https://docs.what3words.com/api/v3/#autosuggest
 > [!NOTE]
 > The returned payload from the `autosuggest` method is described in the [what3words REST API documentation](https://docs.what3words.com/api/v3/#autosuggest).
 
-This function takes an instance of `what3words::Autosuggest` which accepts a string of partial 3 words `'filled.count.so'`.
+This function takes an instance of `what3words_api::Autosuggest` which accepts a string of partial 3 words `'filled.count.so'`.
 
 Example:
 
 ```rust
-let autosuggest = what3words::Autosuggest::new("filled.count.so");
+let autosuggest = what3words_api::Autosuggest::new("filled.count.so");
 ```
 
-The instance of `what3words::Autosuggest` also allows you to set optional parameter(s) (i.e: clipping, focus, etc.):
+The instance of `what3words_api::Autosuggest` also allows you to set optional parameter(s) (i.e: clipping, focus, etc.):
 
 Examples:
 
 #### Focus
 
 ```rust
-let autosuggest = what3words::Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
+let autosuggest = what3words_api::Autosuggest::new("filled.count.so").focus(&Coordinates::new(51.520847, -0.195521));
 ```
 
 #### Clipping
 
 ```rust
-let autosuggest = what3words::Autosuggest::new("filled.count.so")
+let autosuggest = what3words_api::Autosuggest::new("filled.count.so")
     .clip_to_country(&["GB","US"])
     .clip_to_bounding_box(&BoundingBox::new(
         51.521251, -0.203586, 51.521251, -0.203586,
@@ -193,7 +193,7 @@ let autosuggest = what3words::Autosuggest::new("filled.count.so")
 Example:
 
 ```rust
-use what3words::{Autosuggest, AutosuggestResult, What3words};
+use what3words_api::{Autosuggest, AutosuggestResult, What3words};
 
 let w3w = What3words::new("YOUR_API_KEY_HERE");
 
@@ -212,7 +212,7 @@ Example:
 > It is required to specify the type annotation for this function which will allow you to choose between `json` and `geojson` format. Using `GridSection` will use `json` (default) and `GridSectionGeoJson` will use `geojson`.
 
 ```rust
-use what3words::{BoundingBox, GridSection, GridSectionGeoJson, What3words};
+use what3words_api::{BoundingBox, GridSection, GridSectionGeoJson, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -233,7 +233,7 @@ The returned payload from the `available-languages` method is described in the [
 Example:
 
 ```rust
-use what3words::{AvailableLanguages, What3words};
+use what3words_api::{AvailableLanguages, What3words};
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -255,7 +255,7 @@ This method takes a string as a parameter and determines if the string passed in
 Example:
 
 ```rust
-use what3words::What3words;
+use what3words_api::What3words;
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -278,7 +278,7 @@ This method takes a string as a parameter and returns whether the string is in t
 Example:
 
 ```rust
-use what3words::What3words;
+use what3words_api::What3words;
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -300,7 +300,7 @@ This method takes a string as a parameter and searches the string for any possib
 Example:
 
 ```rust
-use what3words::What3words;
+use what3words_api::What3words;
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -319,7 +319,7 @@ This method takes a string as a parameter and first passes it through the W3W re
 Example:
 
 ```rust
-use what3words::What3words;
+use what3words_api::What3words;
 
 let w3w: What3words = What3words::new("YOUR_API_KEY_HERE");
 
@@ -376,7 +376,7 @@ Anyone and everyone is welcome to contribute.
 
 ## Revision History
 
-- `0.1.0` 05/11/24 - Initial release
+- `0.1.0` 14/11/24 - Initial release
 
 ## Licensing
 

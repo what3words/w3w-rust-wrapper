@@ -1,6 +1,6 @@
 use std::env;
 
-use what3words::{
+use what3words_api::{
     Address, AddressGeoJson, Autosuggest, AutosuggestSelection, BoundingBox, ConvertTo3wa,
     ConvertToCoordinates, Coordinates, Error, GridSection, GridSectionGeoJson, What3words,
 };
