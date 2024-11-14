@@ -14,8 +14,12 @@ use reqwest::Client;
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, env, fmt};
 
+pub(crate) trait Validator {
+    fn validate(&self) -> std::result::Result<(), Error>;
+}
+
 pub(crate) trait ToHashMap {
-    fn to_hash_map<'a>(&self) -> HashMap<&'a str, String>;
+    fn to_hash_map<'a>(&self) -> std::result::Result<HashMap<&'a str, String>, Error>;
 }
 
 #[derive(Debug)]
@@ -24,6 +28,7 @@ pub enum Error {
     Http(String),
     Api(String, String),
     Decode(String),
+    InvalidParameter(&'static str),
     Unknown(String),
 }
 
@@ -36,6 +41,7 @@ impl fmt::Display for Error {
                 write!(f, "W3W error: {} {}", code, message)
             }
             Error::Decode(msg) => write!(f, "Decode error: {}", msg),
+            Error::InvalidParameter(msg) => write!(f, "Invalid input: {}", msg),
             Error::Unknown(msg) => write!(f, "Unknown error: {}", msg),
         }
     }
@@ -110,7 +116,7 @@ impl What3words {
         options: &ConvertTo3wa,
     ) -> Result<T> {
         let url = format!("{}/convert-to-3wa", self.host);
-        let mut params = options.to_hash_map();
+        let mut params = options.to_hash_map()?;
         params.insert("format", T::format().to_string());
         self.request(url, Some(params))
     }
@@ -121,7 +127,7 @@ impl What3words {
         options: &ConvertTo3wa,
     ) -> Result<T> {
         let url = format!("{}/convert-to-3wa", self.host);
-        let mut params = options.to_hash_map();
+        let mut params = options.to_hash_map()?;
         params.insert("format", T::format().to_string());
         self.request(url, Some(params)).await
     }
@@ -132,7 +138,7 @@ impl What3words {
         options: &ConvertToCoordinates,
     ) -> Result<T> {
         let url = format!("{}/convert-to-coordinates", self.host);
-        let mut params = options.to_hash_map();
+        let mut params = options.to_hash_map()?;
         params.insert("format", T::format().to_string());
         self.request(url, Some(params))
     }
@@ -143,7 +149,7 @@ impl What3words {
         options: &ConvertToCoordinates,
     ) -> Result<T> {
         let url = format!("{}/convert-to-coordinates", self.host);
-        let mut params = options.to_hash_map();
+        let mut params = options.to_hash_map()?;
         params.insert("format", T::format().to_string());
         self.request(url, Some(params)).await
     }
@@ -186,14 +192,14 @@ impl What3words {
 
     #[cfg(feature = "sync")]
     pub fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
-        let params = autosuggest.clone().to_hash_map();
+        let params = autosuggest.clone().to_hash_map()?;
         let url = format!("{}/autosuggest", self.host);
         self.request(url, Some(params))
     }
 
     #[cfg(not(feature = "sync"))]
     pub async fn autosuggest(&self, autosuggest: &Autosuggest) -> Result<AutosuggestResult> {
-        let params = autosuggest.clone().to_hash_map();
+        let params = autosuggest.clone().to_hash_map()?;
         let url = format!("{}/autosuggest", self.host);
         self.request(url, Some(params)).await
     }
@@ -203,7 +209,7 @@ impl What3words {
         &self,
         autosuggest: &Autosuggest,
     ) -> Result<AutosuggestResult> {
-        let params = autosuggest.clone().to_hash_map();
+        let params = autosuggest.clone().to_hash_map()?;
         let url = format!("{}/autosuggest-with-coordinates", self.host);
         self.request(url, Some(params))
     }
@@ -213,21 +219,21 @@ impl What3words {
         &self,
         autosuggest: &Autosuggest,
     ) -> Result<AutosuggestResult> {
-        let params = autosuggest.clone().to_hash_map();
+        let params = autosuggest.clone().to_hash_map()?;
         let url = format!("{}/autosuggest-with-coordinates", self.host);
         self.request(url, Some(params)).await
     }
 
     #[cfg(feature = "sync")]
     pub fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
-        let params = selection.to_hash_map();
+        let params = selection.to_hash_map()?;
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params))
     }
 
     #[cfg(not(feature = "sync"))]
     pub async fn autosuggest_selection(&self, selection: &AutosuggestSelection) -> Result<()> {
-        let params = selection.to_hash_map();
+        let params = selection.to_hash_map()?;
         let url = format!("{}/autosuggest-selection", self.host);
         self.request(url, Some(params)).await
     }

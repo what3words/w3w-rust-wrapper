@@ -1,12 +1,12 @@
 use std::env;
 
-use what3words::{
+use what3words_api::{
     Address, AddressGeoJson, Autosuggest, AutosuggestSelection, BoundingBox, ConvertTo3wa,
     ConvertToCoordinates, Coordinates, GridSection, GridSectionGeoJson, What3words,
 };
 
 #[::tokio::main]
-async fn main() -> Result<(), what3words::Error> {
+async fn main() -> Result<(), what3words_api::Error> {
     let api_key = env::var("W3W_API_KEY").expect(
         "Please ensure that W3W_API_KEY is added to your environment variables.\nRun `W3W_API_KEY=<YOUR_API_KEY> cargo run --example wrapper-demo` from bash/zsh or `$Env:W3W_API_KEY=<YOUR_API_KEY>; cargo run --example wrapper-demo` from PowerShell.",
     );

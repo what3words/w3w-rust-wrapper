@@ -47,7 +47,7 @@ pub struct Geometry {
     pub kind: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BoundingBox {
     southwest: Coordinates,
     northeast: Coordinates,

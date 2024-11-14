@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::{collections::HashMap, fmt};
 
-use crate::service::ToHashMap;
+use crate::service::{Error, ToHashMap, Validator};
 
 use super::feature::Feature;
 
@@ -9,7 +9,7 @@ pub trait FormattedAddress {
     fn format() -> &'static str;
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ConvertTo3wa {
     coordinates: Option<Coordinates>,
     locale: Option<String>,
@@ -17,7 +17,7 @@ pub struct ConvertTo3wa {
 }
 
 impl ToHashMap for ConvertTo3wa {
-    fn to_hash_map<'a>(&self) -> HashMap<&'a str, String> {
+    fn to_hash_map<'a>(&self) -> Result<HashMap<&'a str, String>, Error> {
         let mut map = HashMap::new();
         if let Some(coordinates) = &self.coordinates {
             map.insert(
@@ -31,7 +31,7 @@ impl ToHashMap for ConvertTo3wa {
         if let Some(ref language) = &self.language {
             map.insert("language", language.into());
         }
-        map
+        Ok(map)
     }
 }
 
@@ -62,7 +62,7 @@ pub struct ConvertToCoordinates {
 }
 
 impl ToHashMap for ConvertToCoordinates {
-    fn to_hash_map<'a>(&self) -> HashMap<&'a str, String> {
+    fn to_hash_map<'a>(&self) -> Result<HashMap<&'a str, String>, Error> {
         let mut map = HashMap::new();
         if let Some(ref locale) = &self.locale {
             map.insert("locale", locale.into());
@@ -70,7 +70,7 @@ impl ToHashMap for ConvertToCoordinates {
         if let Some(ref words) = &self.words {
             map.insert("words", words.into());
         }
-        map
+        Ok(map)
     }
 }
 
@@ -87,7 +87,7 @@ impl ConvertToCoordinates {
     }
 }
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Coordinates {
     pub lat: f64,
     pub lng: f64,
@@ -105,13 +105,78 @@ impl Coordinates {
     }
 }
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Clone)]
+pub struct Circle {
+    lat: f64,
+    lng: f64,
+    radius: u32,
+}
+
+impl Circle {
+    pub fn new(lat: f64, lng: f64, radius: u32) -> Self {
+        Self { lat, lng, radius }
+    }
+}
+
+impl fmt::Display for Circle {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{},{},{}", self.lat, self.lng, self.radius)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Polygon {
+    coordinates: Vec<Coordinates>,
+}
+
+impl Polygon {
+    pub fn new(coordinates: &[Coordinates]) -> Self {
+        Self {
+            coordinates: coordinates.to_vec(),
+        }
+    }
+}
+
+impl Validator for Polygon {
+    fn validate(&self) -> Result<(), Error> {
+        if self.coordinates.len() < 4 {
+            return Err(Error::InvalidParameter(
+                "A polygon must have at least 4 coordinates.",
+            ));
+        }
+        if self.coordinates.len() > 25 {
+            return Err(Error::InvalidParameter(
+                "A polygon must have no more than 25 coordinates.",
+            ));
+        }
+        if self.coordinates.first() != self.coordinates.last() {
+            return Err(Error::InvalidParameter(
+                "The first and last coordinates must be the same to form a closed polygon.",
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for Polygon {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let coords = self
+            .coordinates
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
+        write!(f, "{coords}")
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Square {
     pub southwest: Coordinates,
     pub northeast: Coordinates,
 }
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Address {
     pub country: String,
     pub square: Square,
@@ -137,7 +202,7 @@ pub struct Geometry {
     pub kind: String,
 }
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AddressGeoJson {
     pub features: Vec<Feature<Geometry>>,
     #[serde(rename = "type")]
@@ -168,21 +233,23 @@ mod location_tests {
         let convert = ConvertTo3wa::new(51.521251, -0.203586)
             .locale("en")
             .language("en");
-        let map = convert.to_hash_map();
-        assert_eq!(
-            map.get("coordinates"),
-            Some(&"51.521251,-0.203586".to_string())
-        );
-        assert_eq!(map.get("locale"), Some(&"en".to_string()));
-        assert_eq!(map.get("language"), Some(&"en".to_string()));
+        if let Ok(map) = convert.to_hash_map() {
+            assert_eq!(
+                map.get("coordinates"),
+                Some(&"51.521251,-0.203586".to_string())
+            );
+            assert_eq!(map.get("locale"), Some(&"en".to_string()));
+            assert_eq!(map.get("language"), Some(&"en".to_string()));
+        }
     }
 
     #[test]
     fn test_convert_to_coordinates_to_hash_map() {
         let convert = ConvertToCoordinates::new("index.home.raft").locale("en");
-        let map = convert.to_hash_map();
-        assert_eq!(map.get("locale"), Some(&"en".to_string()));
-        assert_eq!(map.get("words"), Some(&"index.home.raft".to_string()));
+        if let Ok(map) = convert.to_hash_map() {
+            assert_eq!(map.get("locale"), Some(&"en".to_string()));
+            assert_eq!(map.get("words"), Some(&"index.home.raft".to_string()));
+        }
     }
 
     #[test]

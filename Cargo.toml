@@ -1,5 +1,5 @@
 [package]
-name = "what3words"
+name = "what3words-api"
 description = "what3words API wrapper for rust"
 version = "0.1.0"
 edition = "2021"
