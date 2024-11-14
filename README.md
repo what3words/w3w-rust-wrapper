@@ -2,7 +2,7 @@
 
 # w3w-rust-wrapper
 
-The official rust library for [what3words v3 API](https://docs.what3words.com/api/v3/).
+The official rust library for [what3words v3 API](https://docs.what3words.com/api/v3/). Published and supported by <a href="mailto:developer@what3words.com">what3words</a>.
 
 API methods are grouped into a single service object which can be centrally managed by a `What3words`instance.
 
